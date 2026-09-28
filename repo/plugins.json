@@ -23,7 +23,7 @@
     "iconUrl": null,
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
-    "fileSize": 26521,
+    "fileSize": 28623,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -35,7 +35,7 @@
       "Anime",
       "Cartoon"
     ],
-    "version": 1,
+    "version": 2,
     "internalName": "CinemaBox",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CinemaBox.cs3",
     "name": "Cinema Box"
