@@ -18,5 +18,26 @@
     "internalName": "ShabakatyCinemana",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/ShabakatyCinemana.cs3",
     "name": "Shabakaty Cinemana"
+  },
+  {
+    "iconUrl": null,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 26521,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Anime",
+      "Cartoon"
+    ],
+    "version": 1,
+    "internalName": "CinemaBox",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CinemaBox.cs3",
+    "name": "Cinema Box"
   }
 ]
