@@ -7,6 +7,9 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -36,39 +39,7 @@ jobs:
         run: ./gradlew make
 
       - name: Prepare repo folder
-        run: |
-          mkdir -p repo
-          cp ShabakatyCinemana/build/ShabakatyCinemana.cs3 repo/
-          FILE_SIZE=$(wc -c < ShabakatyCinemana/build/ShabakatyCinemana.cs3)
-          python3 -c "
-          import json
-
-          # plugins.json
-          plugins = [{
-            'iconUrl': 'https://cinemana.shabakaty.com/img/icone.png',
-            'apiVersion': 1,
-            'repositoryUrl': 'https://github.com/mo7AmMeD64/cs-cinemana',
-            'fileSize': $FILE_SIZE,
-            'status': 1,
-            'language': 'ar',
-            'authors': ['mo7AmMeD64'],
-            'tvTypes': ['Movie', 'TvSeries', 'Anime'],
-            'version': 1,
-            'internalName': 'ShabakatyCinemana',
-            'url': 'https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/ShabakatyCinemana.cs3',
-            'name': 'Shabakaty Cinemana'
-          }]
-          open('repo/plugins.json','w').write(json.dumps(plugins, indent=2))
-
-          # repo.json
-          repo = {
-            'name': 'Shabakaty Cinemana Repo',
-            'description': 'Arabic CloudStream extensions by mo7AmMeD64',
-            'manifestVersion': 1,
-            'pluginLists': ['https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/plugins.json']
-          }
-          open('repo/repo.json','w').write(json.dumps(repo, indent=2))
-          "
+        run: python3 .github/scripts/make_repo.py
 
       - name: Commit repo to main branch
         run: |
