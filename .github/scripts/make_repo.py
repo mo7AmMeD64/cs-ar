@@ -24,7 +24,7 @@ PLUGINS = [
         "internalName": "CinemaBox",
         "name": "Cinema Box",
         "iconUrl": None,
-        "version": 1,
+        "version": 2,
         "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
         "language": "ar",
     },

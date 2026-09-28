@@ -19,7 +19,10 @@ import java.util.TimeZone
  *   GET /home                               -> sections[] (each with data[] cards)
  *   GET /search?term=&page_number=&page_size=[&category_id=]
  *   GET /shows/shows/dynamic/{id}           -> post_info + sections (trailer / episodes / related)
- *   GET /shows/seasons/player/{seasonId}    -> episodes[] of a season
+ *   GET /shows/shows/dynamic/{id}?season_id={seasonId}
+ *                                           -> same, but the "episodes" section holds THAT season
+ *                                          (the "Seasons" section lists every season: id + title = number)
+ *   GET /shows/seasons/player/{seasonId}    -> episodes[] of a season (fallback)
  *   GET /shows/episodes/player/{id}         -> videos[] + subtitles[] (movies use the show id)
  */
 class CinemaBoxProvider : MainAPI() {
@@ -147,6 +150,68 @@ class CinemaBoxProvider : MainAPI() {
         else -> code
     }
 
+    // ------------------------------------------------------------ season helpers
+
+    /** Season cards of a details response: cards typed "season" (they sit in a "normalPoster" section). */
+    private fun List<JsonObject>.seasonCards(): List<JsonObject> =
+        flatMap { s -> s.arr("data")?.objects() ?: emptyList() }
+            .filter {
+                it.str("type").equals("season", ignoreCase = true) ||
+                    it.str("card_type").equals("seasonPoster", ignoreCase = true)
+            }
+
+    private fun firstNumber(text: String?): Int? =
+        text?.let { Regex("\\d+").find(it)?.value?.toIntOrNull() }
+
+    /** Cards of the "episodes" section -> Episode list for [seasonNumber]. */
+    private fun List<JsonObject>.episodesOf(seasonNumber: Int): List<Episode> {
+        val cards = firstOrNull { it.str("section_type") == "episodes" }
+            ?.arr("data")?.objects() ?: return emptyList()
+        return cards.mapIndexedNotNull { index, ep ->
+            val epId = ep.str("id") ?: return@mapIndexedNotNull null
+            val epNumber = ep.str("description")?.toIntOrNull()
+                ?: firstNumber(ep.str("title"))
+                ?: (index + 1)
+            newEpisode(epId) {
+                this.name = "الحلقة $epNumber"
+                this.season = seasonNumber
+                this.episode = epNumber
+                this.posterUrl = ep.obj("style")?.str("image")
+                this.runTime = ep.str("length")?.toIntOrNull()?.div(60)
+            }
+        }
+    }
+
+    /** Every episode of one season. */
+    private suspend fun loadSeasonEpisodes(
+        showId: String,
+        seasonId: String,
+        seasonNumber: Int,
+    ): List<Episode> {
+        // What the app itself does: the details endpoint with ?season_id= returns that
+        // season's episodes. current_season_id is checked so a season is never mixed up.
+        val res = apiGet("shows/shows/dynamic/$showId?season_id=$seasonId")
+        if (res != null && res.obj("post_info")?.str("current_season_id") == seasonId) {
+            val eps = (res.arr("sections")?.objects() ?: emptyList()).episodesOf(seasonNumber)
+            if (eps.isNotEmpty()) return eps
+        }
+
+        // Fallback: the dedicated season endpoint.
+        val list = apiGet("shows/seasons/player/$seasonId")?.arr("episodes")?.objects()
+            ?: return emptyList()
+        return list.mapIndexedNotNull { index, ep ->
+            val epId = ep.str("id") ?: return@mapIndexedNotNull null
+            val epNumber = ep.str("episode_number")?.toIntOrNull() ?: (index + 1)
+            newEpisode(epId) {
+                this.name = "الحلقة $epNumber"
+                this.season = seasonNumber
+                this.episode = epNumber
+                this.posterUrl = ep.str("image")
+                this.runTime = ep.str("length")?.toIntOrNull()?.div(60)
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- main page
 
     override val mainPage = mainPageOf(
@@ -257,55 +322,37 @@ class CinemaBoxProvider : MainAPI() {
             }
         }
 
-        // ---- series: collect season ids (season number -> id)
-        val seasons = mutableListOf<Pair<Int, String>>()
-        sections
-            .filter { it.str("section_type")?.contains("season", ignoreCase = true) == true }
-            .forEach { s ->
-                s.arr("data")?.objects()?.forEachIndexed { index, item ->
-                    item.str("id")?.let { sid -> seasons.add((index + 1) to sid) }
-                }
-            }
+        // ---- series: every season card -> (season number, season id)
         val currentSeasonId = info.str("current_season_id")
-        if (seasons.none { it.second == currentSeasonId } && currentSeasonId != null) {
+        val seasons = mutableListOf<Pair<Int, String>>()
+        val usedNumbers = mutableSetOf<Int>()
+        sections.seasonCards().forEachIndexed { index, card ->
+            val sid = card.str("id") ?: return@forEachIndexed
+            if (seasons.any { it.second == sid }) return@forEachIndexed
+            var number = firstNumber(card.str("title")) ?: (index + 1)
+            if (!usedNumbers.add(number)) {
+                number = (usedNumbers.maxOrNull() ?: 0) + 1
+                usedNumbers.add(number)
+            }
+            seasons.add(number to sid)
+        }
+        if (currentSeasonId != null && seasons.none { it.second == currentSeasonId }) {
             seasons.add((info.str("season_number")?.toIntOrNull() ?: 1) to currentSeasonId)
         }
 
-        val episodes = mutableListOf<Episode>()
-        for ((seasonNumber, seasonId) in seasons) {
-            val list = apiGet("shows/seasons/player/$seasonId")?.arr("episodes")?.objects()
-                ?: continue
-            list.forEachIndexed { index, ep ->
-                val epId = ep.str("id") ?: return@forEachIndexed
-                val epNumber = ep.str("episode_number")?.toIntOrNull() ?: (index + 1)
-                episodes.add(
-                    newEpisode(epId) {
-                        this.name = "الحلقة $epNumber"
-                        this.season = seasonNumber
-                        this.episode = epNumber
-                        this.posterUrl = ep.str("image")
-                        this.runTime = ep.str("length")?.toIntOrNull()?.div(60)
-                    }
-                )
-            }
-        }
-
-        // Fallback: the "episodes" section of the details response.
-        if (episodes.isEmpty()) {
-            sections.firstOrNull { it.str("section_type") == "episodes" }
-                ?.arr("data")?.objects()?.forEachIndexed { index, ep ->
-                    val epId = ep.str("id") ?: return@forEachIndexed
-                    val epNumber = ep.str("description")?.toIntOrNull() ?: (index + 1)
-                    episodes.add(
-                        newEpisode(epId) {
-                            this.name = "الحلقة $epNumber"
-                            this.season = info.str("season_number")?.toIntOrNull() ?: 1
-                            this.episode = epNumber
-                            this.posterUrl = ep.obj("style")?.str("image")
-                            this.runTime = ep.str("length")?.toIntOrNull()?.div(60)
-                        }
-                    )
+        // Seasons are fetched in small parallel batches (one request per season).
+        val episodes = seasons.chunked(6)
+            .flatMap { batch ->
+                batch.amap { (seasonNumber, seasonId) ->
+                    loadSeasonEpisodes(id, seasonId, seasonNumber)
                 }
+            }
+            .flatten()
+            .toMutableList()
+
+        // Last resort: the "episodes" section of the details response (current season only).
+        if (episodes.isEmpty()) {
+            episodes.addAll(sections.episodesOf(info.str("season_number")?.toIntOrNull() ?: 1))
         }
 
         val sorted = episodes.sortedWith(compareBy({ it.season ?: 1 }, { it.episode ?: 0 }))
