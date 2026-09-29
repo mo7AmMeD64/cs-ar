@@ -44,7 +44,7 @@
     "iconUrl": null,
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
-    "fileSize": 25380,
+    "fileSize": 25396,
     "status": 1,
     "language": "en",
     "authors": [
@@ -56,7 +56,7 @@
       "Anime",
       "Cartoon"
     ],
-    "version": 3,
+    "version": 4,
     "internalName": "MeowTv",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/MeowTv.cs3",
     "name": "MeowTV"
