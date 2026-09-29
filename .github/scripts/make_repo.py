@@ -56,7 +56,7 @@ PLUGINS = [
         "internalName": "CinemaPlus",
         "name": "Cinema Plus",
         "iconUrl": "https://j.top4top.io/p_3472gwtpo1.jpg",
-        "version": 2,
+        "version": 3,
         "tvTypes": ["Movie"],
         "language": "ar",
     },

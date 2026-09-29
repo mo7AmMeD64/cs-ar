@@ -1,4 +1,4 @@
-version = 2
+version = 3
 
 cloudstream {
     description = "Cinema Plus — أفلام عبر Mux (كتالوج مدمج في الصفحة)"
