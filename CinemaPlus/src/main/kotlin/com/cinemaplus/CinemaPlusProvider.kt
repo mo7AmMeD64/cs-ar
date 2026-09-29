@@ -4,7 +4,6 @@ import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.M3u8Helper
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import kotlinx.serialization.json.*
@@ -101,9 +100,11 @@ class CinemaPlusProvider : MainAPI() {
             val card = findCard(a)
             // title: card-wrapper data-title > movie-poster alt > any img alt
             val img = card?.selectFirst("img.movie-poster") ?: card?.selectFirst("img") ?: a.selectFirst("img")
-            val title = card?.attr("data-title")?.takeIf { it.isNotBlank() }
+            val title = (card?.attr("data-title")?.takeIf { it.isNotBlank() }
                 ?: img?.attr("alt")?.takeIf { it.isNotBlank() }
-                ?: continue
+                ?: continue)
+                // strip " logo" suffix from TMDB logo img alts
+                .replace(Regex("\\s*logo$", RegexOption.IGNORE_CASE), "").trim()
             val poster = img?.attr("src")?.takeIf { it.isNotBlank() }
                 ?: img?.attr("data-src")?.takeIf { it.isNotBlank() }
             val year = card?.attr("data-year")?.trim()?.toIntOrNull()
@@ -232,28 +233,16 @@ class CinemaPlusProvider : MainAPI() {
     ): Boolean {
         // data: movie:{tmdbId}:{muxId}
         val body = data.substringAfterLast("/")
-        val muxId = body.substringAfter(":", "").trim()
+        // mux ids are base62 (no colons) — take everything after the LAST colon
+        // (substringAfter(":") would include the tmdbId -> 400 from Mux)
+        val muxId = body.substringAfterLast(":", "").trim()
         if (muxId.length < 20) return false
 
         val master = "https://stream.mux.com/$muxId.m3u8"
         Log.i(TAG, "loadLinks mux=$muxId -> $master")
 
-        // plain HLS — no ticket, no encryption; expand quality variants
-        try {
-            val links = M3u8Helper.generateM3u8(
-                source = name,
-                streamUrl = master,
-                referer = "",
-            )
-            if (links.isNotEmpty()) {
-                links.forEach { callback(it) }
-                return true
-            }
-        } catch (e: Exception) {
-            Log.i(TAG, "generateM3u8 failed: ${e.message}")
-        }
-
-        // fallback: the master playlist itself
+        // plain Mux HLS (fMP4 renditions) — ExoPlayer handles the multi-rendition
+        // master playlist natively; M3u8Helper would throw "must contains TS files"
         callback(
             newExtractorLink(
                 source = name,
