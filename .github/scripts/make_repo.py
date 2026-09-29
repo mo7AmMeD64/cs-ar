@@ -28,6 +28,14 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
         "language": "ar",
     },
+    {
+        "internalName": "MeowTv",
+        "name": "MeowTV",
+        "iconUrl": None,
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
+        "language": "en",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
