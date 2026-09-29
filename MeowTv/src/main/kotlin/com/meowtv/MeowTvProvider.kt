@@ -216,13 +216,21 @@ class MeowTvProvider : MainAPI() {
             for (e in seasonJson["episodes"]?.jsonArray ?: emptyList()) {
                 val ep = e.jsonObject
                 val epNum = ep["episode_number"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: continue
-                episodes.add(newEpisode("tv:$id:$seasonNum:$epNum") {
-                    this.name = ep.str("name") ?: "Episode $epNum"
-                    this.season = seasonNum
-                    this.episode = epNum
-                    this.posterUrl = ep.str("still_path")?.let { "$TMDB_IMG/w300$it" }
-                    this.description = ep.str("overview")
-                })
+                // fix = false: keep our 'tv:{id}:{s}:{e}' data — newEpisode's default fixUrl()
+                // prepends mainUrl and mangles it into 'https://meowtv.ru/tv:...'
+                episodes.add(
+                    newEpisode(
+                        url = "tv:$id:$seasonNum:$epNum",
+                        initializer = {
+                            this.name = ep.str("name") ?: "Episode $epNum"
+                            this.season = seasonNum
+                            this.episode = epNum
+                            this.posterUrl = ep.str("still_path")?.let { "$TMDB_IMG/w300$it" }
+                            this.description = ep.str("overview")
+                        },
+                        fix = false,
+                    )
+                )
             }
         }
 
@@ -270,7 +278,8 @@ class MeowTvProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
         // data: movie:{tmdbId} | tv:{tmdbId}:{season}:{episode}
-        val parts = data.split(":")
+        // (normalize: the app may prepend mainUrl to the episode data)
+        val parts = data.substringAfterLast("/").split(":")
         val kind = parts.getOrNull(0) ?: return false
         Log.i(TAG, "loadLinks data='$data' kind=$kind")
 
