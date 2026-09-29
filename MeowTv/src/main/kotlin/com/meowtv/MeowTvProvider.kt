@@ -1,6 +1,7 @@
 package com.meowtv
 
 import android.util.Base64
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
@@ -47,6 +48,7 @@ class MeowTvProvider : MainAPI() {
     )
 
     companion object {
+        private const val TAG = "MeowTV"
         private const val USER_AGENT =
             "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36"
 
@@ -236,14 +238,19 @@ class MeowTvProvider : MainAPI() {
 
     // ---------- links ----------
 
-    private suspend fun m3u8Link(url: String, label: String): ExtractorLink = newExtractorLink(
+    private suspend fun m3u8Link(
+        url: String,
+        label: String,
+        extraHeaders: Map<String, String> = emptyMap(),
+    ): ExtractorLink = newExtractorLink(
         source = name,
         name = label,
         url = url,
         type = ExtractorLinkType.M3U8,
     ) {
         this.referer = mainUrl
-        this.headers = mapOf(
+        // some streams (i-arch/acme) require their own Referer from the decrypted payload
+        this.headers = if (extraHeaders.isNotEmpty()) extraHeaders else mapOf(
             "Origin" to "https://meowtv.ru",
             "Referer" to "https://meowtv.ru/",
         )
@@ -265,6 +272,7 @@ class MeowTvProvider : MainAPI() {
         // data: movie:{tmdbId} | tv:{tmdbId}:{season}:{episode}
         val parts = data.split(":")
         val kind = parts.getOrNull(0) ?: return false
+        Log.i(TAG, "loadLinks data='$data' kind=$kind")
 
         val streamPath: String
         val subsPath: String
@@ -295,51 +303,76 @@ class MeowTvProvider : MainAPI() {
         } catch (_: Exception) {}
 
         // streams — fresh ticket per server (observed client behaviour).
-        // The API sometimes returns an encrypted empty {} payload (temporary
-        // outage / soft rate limit); retry the whole server loop before giving up.
+        // NOTE: keep API pressure LOW — the API soft-rate-limits (encrypted empty {})
+        // when hammered, which kills all subsequent requests. Single pass, one retry.
+        var foundAny = false
         var attempt = 0
-        while (attempt < 3) {
-            if (attempt > 0) delay(2500)
+        while (attempt < 2 && !foundAny) {
+            if (attempt > 0) delay(8000)
             for (server in SERVERS) {
                 try {
-                    val ticket = newTicket() ?: continue
+                    val ticket = newTicket()
+                    if (ticket.isNullOrBlank()) {
+                        Log.i(TAG, "$server: no ticket")
+                        continue
+                    }
 
                     val r = app.get(
                         "$apiUrl$streamPath?s=$server",
                         headers = siteHeaders + mapOf("x-stream-ticket" to ticket),
                     )
+                    Log.i(TAG, "$server: ${r.code}")
                     if (r.code != 200) continue   // 404 = No stream -> next server
 
-                    val blob = r.text.toJsonObject() ?: continue
-                    val n = blob.str("n") ?: continue
-                    val d = blob.str("d") ?: continue
-                    val plain = decryptMeow(n, d) ?: continue
-                    val stream = plain.toJsonObject() ?: continue
+                    val blob = r.text.toJsonObject()
+                    val n = blob?.str("n")
+                    val d = blob?.str("d")
+                    if (n == null || d == null) {
+                        Log.i(TAG, "$server: blob missing n/d")
+                        continue
+                    }
+                    val plain = decryptMeow(n, d)
+                    val stream = plain?.toJsonObject()
+                    if (stream == null) {
+                        Log.i(TAG, "$server: decrypt failed")
+                        continue
+                    }
 
-                    var found = false
-
-                    // {"streams": [{"language": "...", "url": "..."}]} — multi-server shape
-                    stream["streams"]?.jsonArray?.forEach { el ->
-                        val sUrl = el.jsonObject.str("url") ?: return@forEach
-                        val sLang = el.jsonObject.str("language") ?: "Auto"
-                        callback(m3u8Link(sUrl, sLang))
-                        found = true
+                    // headers the stream itself requires (e.g. Referer for i-arch)
+                    val payloadHeaders = LinkedHashMap<String, String>()
+                    val hdrs = stream["headers"]?.jsonObject
+                    if (hdrs != null) {
+                        for ((k, v) in hdrs.entries) {
+                            val value = v.jsonPrimitive.contentOrNull
+                            if (!value.isNullOrBlank()) payloadHeaders[k] = value
+                        }
                     }
 
                     // {"language":"Auto","url":"https://...m3u8","headers":{}} — single-stream shape
                     val single = stream.str("url")
                     if (single != null) {
-                        callback(m3u8Link(single, stream.str("language") ?: "Auto"))
-                        found = true
+                        Log.i(TAG, "$server: URL $single")
+                        callback(m3u8Link(single, stream.str("language") ?: "Auto", payloadHeaders))
+                        foundAny = true
                     }
 
-                    if (found) return true
-                } catch (_: Exception) {
-                    // network/ticket hiccup -> try next server
+                    // {"streams": [{"language": "...", "url": "..."}]} — multi-server shape
+                    stream["streams"]?.jsonArray?.forEach { el ->
+                        val sUrl = el.jsonObject.str("url") ?: return@forEach
+                        if (!sUrl.startsWith("http")) return@forEach   // skip embed pages
+                        Log.i(TAG, "$server: streams[] $sUrl")
+                        callback(m3u8Link(sUrl, el.jsonObject.str("language") ?: "Auto", payloadHeaders))
+                        foundAny = true
+                    }
+
+                    if (foundAny) return true
+                } catch (e: Exception) {
+                    Log.i(TAG, "$server: ERR ${e.message}")
                 }
             }
             attempt++
         }
-        return false
+        Log.i(TAG, "loadLinks done, found=$foundAny")
+        return foundAny
     }
 }

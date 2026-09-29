@@ -32,7 +32,7 @@ PLUGINS = [
         "internalName": "MeowTv",
         "name": "MeowTV",
         "iconUrl": None,
-        "version": 2,
+        "version": 3,
         "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
         "language": "en",
     },
