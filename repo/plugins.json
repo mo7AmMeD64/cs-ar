@@ -102,7 +102,7 @@
     "iconUrl": "https://j.top4top.io/p_3472gwtpo1.jpg",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
-    "fileSize": 18408,
+    "fileSize": 17803,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -111,7 +111,7 @@
     "tvTypes": [
       "Movie"
     ],
-    "version": 1,
+    "version": 2,
     "internalName": "CinemaPlus",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CinemaPlus.cs3",
     "name": "Cinema Plus"
