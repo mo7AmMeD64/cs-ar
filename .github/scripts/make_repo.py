@@ -52,6 +52,14 @@ PLUGINS = [
         "tvTypes": ["Anime"],
         "language": "ar",
     },
+    {
+        "internalName": "CinemaPlus",
+        "name": "Cinema Plus",
+        "iconUrl": "https://j.top4top.io/p_3472gwtpo1.jpg",
+        "version": 1,
+        "tvTypes": ["Movie"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
