@@ -5,6 +5,7 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
 import org.json.JSONObject
 import java.security.MessageDigest
@@ -279,54 +280,65 @@ class MeowTvProvider : MainAPI() {
             subsPath = "/subs/tv/$id/$season/$episode"
         }
 
-        // subtitles (plain WebVTT, no ticket needed)
+        // subtitles (plain WebVTT — rezesubs.com 403s requests without proper headers)
         try {
             app.get("$apiUrl$subsPath", headers = siteHeaders).text.toJsonArray()
                 ?.forEach { el ->
                     val label = el.jsonObject.str("label") ?: return@forEach
                     val file = el.jsonObject.str("file") ?: return@forEach
-                    subtitleCallback(SubtitleFile(label, file))
+                    subtitleCallback(
+                        newSubtitleFile(label, file) {
+                            this.headers = siteHeaders
+                        }
+                    )
                 }
         } catch (_: Exception) {}
 
-        // streams — fresh ticket per server (observed client behaviour)
-        for (server in SERVERS) {
-            try {
-                val ticket = newTicket() ?: continue
+        // streams — fresh ticket per server (observed client behaviour).
+        // The API sometimes returns an encrypted empty {} payload (temporary
+        // outage / soft rate limit); retry the whole server loop before giving up.
+        var attempt = 0
+        while (attempt < 3) {
+            if (attempt > 0) delay(2500)
+            for (server in SERVERS) {
+                try {
+                    val ticket = newTicket() ?: continue
 
-                val r = app.get(
-                    "$apiUrl$streamPath?s=$server",
-                    headers = siteHeaders + mapOf("x-stream-ticket" to ticket),
-                )
-                if (r.code != 200) continue   // 404 = No stream -> next server
+                    val r = app.get(
+                        "$apiUrl$streamPath?s=$server",
+                        headers = siteHeaders + mapOf("x-stream-ticket" to ticket),
+                    )
+                    if (r.code != 200) continue   // 404 = No stream -> next server
 
-                val blob = r.text.toJsonObject() ?: continue
-                val n = blob.str("n") ?: continue
-                val d = blob.str("d") ?: continue
-                val plain = decryptMeow(n, d) ?: continue
-                val stream = plain.toJsonObject() ?: continue
+                    val blob = r.text.toJsonObject() ?: continue
+                    val n = blob.str("n") ?: continue
+                    val d = blob.str("d") ?: continue
+                    val plain = decryptMeow(n, d) ?: continue
+                    val stream = plain.toJsonObject() ?: continue
 
-                var found = false
+                    var found = false
 
-                // {"streams": [{"language": "...", "url": "..."}]} — multi-server shape
-                stream["streams"]?.jsonArray?.forEach { el ->
-                    val sUrl = el.jsonObject.str("url") ?: return@forEach
-                    val sLang = el.jsonObject.str("language") ?: "Auto"
-                    callback(m3u8Link(sUrl, sLang))
-                    found = true
+                    // {"streams": [{"language": "...", "url": "..."}]} — multi-server shape
+                    stream["streams"]?.jsonArray?.forEach { el ->
+                        val sUrl = el.jsonObject.str("url") ?: return@forEach
+                        val sLang = el.jsonObject.str("language") ?: "Auto"
+                        callback(m3u8Link(sUrl, sLang))
+                        found = true
+                    }
+
+                    // {"language":"Auto","url":"https://...m3u8","headers":{}} — single-stream shape
+                    val single = stream.str("url")
+                    if (single != null) {
+                        callback(m3u8Link(single, stream.str("language") ?: "Auto"))
+                        found = true
+                    }
+
+                    if (found) return true
+                } catch (_: Exception) {
+                    // network/ticket hiccup -> try next server
                 }
-
-                // {"language":"Auto","url":"https://...m3u8","headers":{}} — single-stream shape
-                val single = stream.str("url")
-                if (single != null) {
-                    callback(m3u8Link(single, stream.str("language") ?: "Auto"))
-                    found = true
-                }
-
-                if (found) return true
-            } catch (_: Exception) {
-                // network/ticket hiccup -> try next server
             }
+            attempt++
         }
         return false
     }
