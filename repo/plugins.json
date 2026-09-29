@@ -109,7 +109,10 @@
       "mo7AmMeD64"
     ],
     "tvTypes": [
-      "Movie"
+      "Movie",
+      "TvSeries",
+      "Anime",
+      "AnimeMovie"
     ],
     "version": 3,
     "internalName": "CinemaPlus",
