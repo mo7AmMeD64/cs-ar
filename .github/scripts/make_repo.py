@@ -44,6 +44,14 @@ PLUGINS = [
         "tvTypes": ["TvSeries", "Movie"],
         "language": "ar",
     },
+    {
+        "internalName": "Animewitcher",
+        "name": "AnimeWitcher",
+        "iconUrl": "https://raw.githubusercontent.com/Abodabodd/Oldarabrepo/refs/heads/main/img/anime_witcher_round_icon.png",
+        "version": 3,
+        "tvTypes": ["Anime"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
