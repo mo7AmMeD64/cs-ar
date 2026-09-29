@@ -20,15 +20,18 @@ import org.jsoup.nodes.Element
  * - The app is an AppCreator24 (e-droid) WebView shell.
  * - **config.php** lists ~627 content sections, one per movie/series:
  *     [s{pageId}_tipo=2][s{pageId}_tit={title}][s{pageId}_idgo={tmdbId}]...
+ *   (requires User-Agent "Android Vinebre Software"!)
  * - Each section is a static HTML page:
  *     GET https://html.e-droid.net/html/get_html.php?ida=3796813&ids={pageId}
- *     (requires User-Agent "Android Vinebre Software"!)
+ *     (also requires User-Agent "Android Vinebre Software")
  *     - SERIES pages: const SERIES_ID = {tmdb}; const episodeLinks = {"s-e": "muxToken"|"fullUrl"|"#"}
  *     - MOVIE pages:  const MOVIE_ID = {tmdb}; const videoSources = {"480": "url"|"muxToken"}
  * - Playback: non-http values are Mux tokens -> https://stream.mux.com/{token}.m3u8
  *   (plain HLS, fMP4 renditions — ExoPlayer plays the master playlist natively)
  * - Movies catalog (with posters): https://ffrrx-2000.github.io/cinema-plas-bot/
  * - Metadata: TMDB direct (api.themoviedb.org), language=ar.
+ *   NOTE: TMDB movie/tv ids are separate namespaces — /tv/{id} and /movie/{id} can
+ *   BOTH exist with different content, so the endpoint must match the page type.
  */
 class CinemaPlusProvider : MainAPI() {
 
@@ -64,11 +67,15 @@ class CinemaPlusProvider : MainAPI() {
         return null
     }
 
-    private suspend fun tmdbJson(path: String): JsonObject? = try {
-        app.get(
-            "$TMDB_API$path",
-            params = mapOf("api_key" to TMDB_KEY, "language" to "ar"),
-        ).text.let { Json.parseToJsonElement(it).jsonObject }
+    /** ONLY 200 responses count — 404/429 error bodies must NOT be returned as objects */
+    private suspend fun tmdbJson(path: String, page: Int? = null): JsonObject? = try {
+        val params = mutableMapOf("api_key" to TMDB_KEY, "language" to "ar")
+        if (page != null) params["page"] = page.toString()
+        val r = app.get("$TMDB_API$path", params = params)
+        if (r.code != 200) {
+            Log.i(TAG, "tmdb $path -> ${r.code}")
+            null
+        } else r.text.let { Json.parseToJsonElement(it).jsonObject }
     } catch (_: Exception) { null }
 
     private fun cleanTitle(t: String) = t.replace(Regex("\\s*logo$", RegexOption.IGNORE_CASE), "").trim()
@@ -140,8 +147,11 @@ class CinemaPlusProvider : MainAPI() {
 
     override val mainPage = mainPageOf(
         "movies" to "أفلام",
-        "all" to "المحتوى الكامل (مسلسلات وأفلام)",
+        "series" to "مسلسلات وأنمي",
+        "all" to "المحتوى الكامل",
     )
+
+    private data class CatalogItem(val tmdbId: Int, val muxId: String, val title: String, val poster: String?)
 
     private suspend fun catalogFromGithub(): List<CatalogItem> {
         val items = mutableListOf<CatalogItem>()
@@ -175,8 +185,6 @@ class CinemaPlusProvider : MainAPI() {
         return items
     }
 
-    private data class CatalogItem(val tmdbId: Int, val muxId: String, val title: String, val poster: String?)
-
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse = coroutineScope {
         val chunkSize = 24
         val startIdx = ((page - 1) % 50) * chunkSize
@@ -194,14 +202,42 @@ class CinemaPlusProvider : MainAPI() {
             return@coroutineScope newHomePageResponse(request.name, items)
         }
 
-        // "all" — config-based content list, posters via TMDB (parallel)
+        if (request.data == "series") {
+            // TMDB discover/tv ∩ config ids = only playable series/anime, correct posters
+            val config = getConfig()
+            val byTmdb = config.associateBy { it.tmdbId }
+            val items = mutableListOf<SearchResponse>()
+            // scan a few discover pages per rail page to find config matches
+            for (dp in (page - 1) * 3 + 1..page * 3) {
+                val res = tmdbJson("/discover/tv", dp) ?: continue
+                for (el in res["results"]?.jsonArray ?: emptyList()) {
+                    val j = el.jsonObject
+                    val id = j["id"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: continue
+                    val item = byTmdb[id] ?: continue
+                    val poster = j.str("poster_path")?.let { "$TMDB_IMG/w500$it" }
+                    items.add(
+                        newTvSeriesSearchResponse(
+                            j.str("name", "original_name") ?: item.title,
+                            "cinemaplus://watch/${item.pageId}:${item.tmdbId}",
+                            TvType.TvSeries,
+                        ) {
+                            this.posterUrl = poster
+                            this.year = j.str("first_air_date")?.take(4)?.toIntOrNull()
+                        }
+                    )
+                }
+            }
+            return@coroutineScope newHomePageResponse(request.name, items)
+        }
+
+        // "all" — config-based content list, titles from TMDB (fallback: config title)
         val config = getConfig()
         val chunk = config.drop(startIdx).take(chunkSize)
         val items = chunk.map { item ->
             async {
                 val j = tmdbJson("/movie/${item.tmdbId}") ?: tmdbJson("/tv/${item.tmdbId}")
                 val title = j?.str("title", "name", "original_title", "original_name") ?: item.title
-                val isTv = j?.contains("seasons") == true || j?.str("name") != null && j.str("title") == null
+                val isTv = j?.contains("seasons") == true
                 val poster = j?.str("poster_path")?.let { "$TMDB_IMG/w500$it" }
                 val year = j?.str("release_date", "first_air_date")?.take(4)?.toIntOrNull()
                 if (isTv) {
@@ -229,18 +265,19 @@ class CinemaPlusProvider : MainAPI() {
         return coroutineScope {
             matches.map { item ->
                 async {
+                    // title = the config title (this is what matched the query);
+                    // TMDB only for the poster/year
                     val j = tmdbJson("/movie/${item.tmdbId}") ?: tmdbJson("/tv/${item.tmdbId}")
-                    val title = j?.str("title", "name", "original_title", "original_name") ?: item.title
-                    val isTv = j?.contains("seasons") == true || (j?.str("name") != null && j.str("title") == null)
                     val poster = j?.str("poster_path")?.let { "$TMDB_IMG/w500$it" }
                     val year = j?.str("release_date", "first_air_date")?.take(4)?.toIntOrNull()
+                    val isTv = j?.contains("seasons") == true
                     if (isTv) {
-                        newTvSeriesSearchResponse(title, "cinemaplus://watch/${item.pageId}:${item.tmdbId}", TvType.TvSeries) {
+                        newTvSeriesSearchResponse(item.title, "cinemaplus://watch/${item.pageId}:${item.tmdbId}", TvType.TvSeries) {
                             this.posterUrl = poster
                             this.year = year
                         }
                     } else {
-                        newMovieSearchResponse(title, "cinemaplus://watch/${item.pageId}:${item.tmdbId}", TvType.Movie) {
+                        newMovieSearchResponse(item.title, "cinemaplus://watch/${item.pageId}:${item.tmdbId}", TvType.Movie) {
                             this.posterUrl = poster
                             this.year = year
                         }
@@ -268,43 +305,72 @@ class CinemaPlusProvider : MainAPI() {
         if (pageId.isBlank()) return null
 
         val html = fetchContentPage(pageId) ?: return null
-        val j = tmdbJson("/tv/$tmdbId") ?: tmdbJson("/movie/$tmdbId") ?: return null
+        val isSeries = isSeriesPage(html)
+        val configTitle = getConfig().firstOrNull { it.pageId == pageId }?.title
 
-        val title = j.str("title", "name", "original_title", "original_name") ?: return null
-        val poster = j.str("poster_path")?.let { "$TMDB_IMG/w500$it" }
-        val bgPoster = j.str("backdrop_path")?.let { "$TMDB_IMG/w780$it" }
-        val plot = j.str("overview")
-        val year = j.str("release_date", "first_air_date")?.take(4)?.toIntOrNull()
-        val rating = j["vote_average"]?.jsonPrimitive?.contentOrNull?.toFloatOrNull()
-        val tags = j["genres"]?.jsonArray?.mapNotNull { it.jsonObject.str("name") } ?: emptyList()
+        // endpoint must match the page type (TMDB tv/movie ids are separate namespaces)
+        val j = if (isSeries) (tmdbJson("/tv/$tmdbId") ?: tmdbJson("/movie/$tmdbId"))
+        else (tmdbJson("/movie/$tmdbId") ?: tmdbJson("/tv/$tmdbId"))
+
+        val title = j?.str("title", "name", "original_title", "original_name") ?: configTitle
+        if (title.isNullOrBlank()) return null
+        val poster = j?.str("poster_path")?.let { "$TMDB_IMG/w500$it" }
+        val bgPoster = j?.str("backdrop_path")?.let { "$TMDB_IMG/w780$it" }
+        val plot = j?.str("overview")
+        val year = j?.str("release_date", "first_air_date")?.take(4)?.toIntOrNull()
+        val rating = j?.get("vote_average")?.jsonPrimitive?.contentOrNull?.toFloatOrNull()
+        val tags = j?.get("genres")?.jsonArray?.mapNotNull { it.jsonObject.str("name") } ?: emptyList()
 
         val episodeLinks = parseEpisodeLinks(html)
         if (episodeLinks != null) {
             // SERIES: episodes from TMDB seasons, stream source from episodeLinks["s-e"]
-            val seasonsRaw = j["seasons"]?.jsonArray ?: return null
+            val seasonsRaw = j?.get("seasons")?.jsonArray
             val episodes = mutableListOf<Episode>()
-            for (s in seasonsRaw) {
-                val seasonNum = s.jsonObject["season_number"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: continue
-                val seasonJson = tmdbJson("/tv/$tmdbId/season/$seasonNum") ?: continue
-                for (e in seasonJson["episodes"]?.jsonArray ?: emptyList()) {
-                    val ep = e.jsonObject
-                    val epNum = ep["episode_number"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: continue
-                    val src = episodeLinks["$seasonNum-$epNum"]
-                    if (src == null || src == "#") continue   // coming soon / not available
+            if (seasonsRaw != null) {
+                for (s in seasonsRaw) {
+                    val seasonNum = s.jsonObject["season_number"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: continue
+                    val seasonJson = tmdbJson("/tv/$tmdbId/season/$seasonNum") ?: continue
+                    for (e in seasonJson["episodes"]?.jsonArray ?: emptyList()) {
+                        val ep = e.jsonObject
+                        val epNum = ep["episode_number"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: continue
+                        val src = episodeLinks["$seasonNum-$epNum"]
+                        if (src == null || src == "#") continue   // coming soon / not available
+                        episodes.add(
+                            newEpisode(
+                                url = "series:$pageId:$tmdbId:$seasonNum:$epNum",
+                                initializer = {
+                                    this.name = ep.str("name") ?: "Episode $epNum"
+                                    this.season = seasonNum
+                                    this.episode = epNum
+                                    this.posterUrl = ep.str("still_path")?.let { "$TMDB_IMG/w300$it" }
+                                    this.description = ep.str("overview")
+                                },
+                                fix = false,
+                            )
+                        )
+                    }
+                }
+            }
+            // TMDB failed/empty -> build episodes from episodeLinks keys alone
+            if (episodes.isEmpty()) {
+                for ((key, src) in episodeLinks) {
+                    if (src == "#") continue
+                    val parts = key.split("-")
+                    val sN = parts.getOrNull(0)?.toIntOrNull() ?: 1
+                    val eN = parts.getOrNull(1)?.toIntOrNull() ?: continue
                     episodes.add(
                         newEpisode(
-                            url = "series:$pageId:$tmdbId:$seasonNum:$epNum",
+                            url = "series:$pageId:$tmdbId:$sN:$eN",
                             initializer = {
-                                this.name = ep.str("name") ?: "Episode $epNum"
-                                this.season = seasonNum
-                                this.episode = epNum
-                                this.posterUrl = ep.str("still_path")?.let { "$TMDB_IMG/w300$it" }
-                                this.description = ep.str("overview")
+                                this.name = "الحلقة $eN"
+                                this.season = sN
+                                this.episode = eN
                             },
                             fix = false,
                         )
                     )
                 }
+                episodes.sortedBy { (it.season ?: 1) * 1000 + (it.episode ?: 0) }
             }
             if (episodes.isEmpty()) return null
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
@@ -326,21 +392,20 @@ class CinemaPlusProvider : MainAPI() {
             this.year = year
             this.tags = tags
             this.score = Score.from10(rating)
-            this.duration = j["runtime"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
+            this.duration = j?.get("runtime")?.jsonPrimitive?.contentOrNull?.toIntOrNull()
         }
     }
 
-    /** Legacy github-catalog movie: {tmdbId}:{muxId} */
     private suspend fun loadLegacyMovie(tmdbId: Int, muxId: String): LoadResponse? {
-        val j = tmdbJson("/movie/$tmdbId") ?: return null
-        val title = j.str("title", "original_title") ?: return null
+        val j = tmdbJson("/movie/$tmdbId")
+        val title = j?.str("title", "original_title") ?: "Movie $tmdbId"
         return newMovieLoadResponse(title, "cinemaplus://movie/$tmdbId:$muxId", TvType.Movie, "movie:$tmdbId:$muxId") {
-            this.posterUrl = j.str("poster_path")?.let { "$TMDB_IMG/w500$it" }
-            this.backgroundPosterUrl = j.str("backdrop_path")?.let { "$TMDB_IMG/w780$it" }
-            this.plot = j.str("overview")
-            this.year = j.str("release_date")?.take(4)?.toIntOrNull()
-            this.tags = j["genres"]?.jsonArray?.mapNotNull { it.jsonObject.str("name") } ?: emptyList()
-            this.score = Score.from10(j["vote_average"]?.jsonPrimitive?.contentOrNull?.toFloatOrNull())
+            this.posterUrl = j?.str("poster_path")?.let { "$TMDB_IMG/w500$it" }
+            this.backgroundPosterUrl = j?.str("backdrop_path")?.let { "$TMDB_IMG/w780$it" }
+            this.plot = j?.str("overview")
+            this.year = j?.str("release_date")?.take(4)?.toIntOrNull()
+            this.tags = j?.get("genres")?.jsonArray?.mapNotNull { it.jsonObject.str("name") } ?: emptyList()
+            this.score = Score.from10(j?.get("vote_average")?.jsonPrimitive?.contentOrNull?.toFloatOrNull())
         }
     }
 
