@@ -79,5 +79,23 @@
     "internalName": "Krmzy",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Krmzy.cs3",
     "name": "قرمزي"
+  },
+  {
+    "iconUrl": "https://raw.githubusercontent.com/Abodabodd/Oldarabrepo/refs/heads/main/img/anime_witcher_round_icon.png",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 34547,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Anime"
+    ],
+    "version": 3,
+    "internalName": "Animewitcher",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Animewitcher.cs3",
+    "name": "AnimeWitcher"
   }
 ]
