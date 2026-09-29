@@ -97,5 +97,23 @@
     "internalName": "Animewitcher",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Animewitcher.cs3",
     "name": "AnimeWitcher"
+  },
+  {
+    "iconUrl": "https://j.top4top.io/p_3472gwtpo1.jpg",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 18408,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie"
+    ],
+    "version": 1,
+    "internalName": "CinemaPlus",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CinemaPlus.cs3",
+    "name": "Cinema Plus"
   }
 ]
