@@ -36,6 +36,14 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
         "language": "en",
     },
+    {
+        "internalName": "Krmzy",
+        "name": "قرمزي",
+        "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwTnAJOvyri3uHzHxjkEdlaBBKs8MAvIuJtFmCoo9u5qYiuFpHZjcl6tDi&s=10",
+        "version": 1,
+        "tvTypes": ["TvSeries", "Movie"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
