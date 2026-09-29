@@ -60,5 +60,24 @@
     "internalName": "MeowTv",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/MeowTv.cs3",
     "name": "MeowTV"
+  },
+  {
+    "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwTnAJOvyri3uHzHxjkEdlaBBKs8MAvIuJtFmCoo9u5qYiuFpHZjcl6tDi&s=10",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 30375,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "TvSeries",
+      "Movie"
+    ],
+    "version": 1,
+    "internalName": "Krmzy",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Krmzy.cs3",
+    "name": "قرمزي"
   }
 ]
