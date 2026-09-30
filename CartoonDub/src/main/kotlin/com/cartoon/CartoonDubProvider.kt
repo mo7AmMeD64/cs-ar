@@ -6,6 +6,9 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
@@ -98,16 +101,23 @@ class CartoonDubProvider : MainAPI() {
         return out
     }
 
-    private suspend fun getCards(sectionId: String): List<Card> = try {
-        val body = app.get(
-            CARDS_URL.format(sectionId),
-            headers = mapOf("User-Agent" to EDOROID_UA),
-        ).text
-        parseCards(body)
-    } catch (e: Exception) {
-        Log.i(TAG, "cards $sectionId err: ${e.message}")
-        emptyList()
+    private suspend fun getCards(sectionId: String): List<Card> {
+        cardsCache[sectionId]?.let { return it }
+        val out = try {
+            val body = app.get(
+                CARDS_URL.format(sectionId),
+                headers = mapOf("User-Agent" to EDOROID_UA),
+            ).text
+            parseCards(body)
+        } catch (e: Exception) {
+            Log.i(TAG, "cards $sectionId err: ${e.message}")
+            emptyList()
+        }
+        if (out.isNotEmpty()) cardsCache[sectionId] = out
+        return out
     }
+
+    private val cardsCache = java.util.concurrent.ConcurrentHashMap<String, List<Card>>()
 
     private fun posterFor(cardId: String?): String? =
         cardId?.takeIf { it.isNotBlank() && it != "FFFFFFFF" }?.let { CARD_IMG.format(it) }
@@ -252,9 +262,15 @@ class CartoonDubProvider : MainAPI() {
                 ?.jsonObject?.str("original_name", "name")
                 ?.trim()?.split(" ")?.firstOrNull()?.lowercase()
         val episodes = mutableListOf<Episode>()
+
+        // fetch ALL sub-sections IN PARALLEL (sequential = CloudStream load timeout ->
+        // load fails -> WebView fallback with the mangled R2 url -> the R2 404 page)
+        val subLists = coroutineScope {
+            cards.map { c -> async { c.target?.let { getCards(it) } } }.awaitAll()
+        }
+
         for ((idx, c) in cards.withIndex()) {
-            val target = c.target ?: continue
-            val subCards = getCards(target)
+            val subCards = subLists[idx] ?: continue
             val subUrls = subCards.filter { it.url != null }
             if (subUrls.isNotEmpty()) {
                 val seasonNum = idx + 1
@@ -276,16 +292,19 @@ class CartoonDubProvider : MainAPI() {
             } else {
                 // deeper nesting: episode cards point to (often EMPTY) episode sections;
                 // the app used its history cache for these — construct the R2 URL instead
-                for (sub in subCards) {
-                    val subTarget = sub.target ?: continue
-                    val epCards = getCards(subTarget)
-                    val withUrls = epCards.filter { it.url != null }
+                val epLists = coroutineScope {
+                    subCards.map { s -> async { s.target?.let { getCards(it) } } }.awaitAll()
+                }
+                var hasUrls = false
+                for ((j, sub) in subCards.withIndex()) {
+                    val withUrls = epLists[j]?.filter { it.url != null } ?: emptyList()
                     if (withUrls.isNotEmpty()) {
+                        hasUrls = true
                         for (ec in withUrls) {
                             val epNum = Regex("(\\d+)").findAll(ec.title).lastOrNull()?.value?.toIntOrNull()
                             episodes.add(
                                 newEpisode(
-                                    url = ec.url!!,
+                                    url = ec.url!!, 
                                     initializer = {
                                         this.name = "${c.title} - ${sub.title.ifBlank { ec.title }}"
                                         this.season = idx + 1
@@ -295,32 +314,36 @@ class CartoonDubProvider : MainAPI() {
                                 )
                             )
                         }
-                        continue
                     }
-                    // empty episode section -> construct + verify the R2 URL
-                    val epNum = Regex("(\\d+)").findAll(sub.title).lastOrNull()?.value?.toIntOrNull()
-                    val constructed = constructEpisodeUrl(
-                        folder = folder,
-                        seriesAr = fallbackTitle,
-                        seasonName = c.title,
-                        epTitle = sub.title,
-                        epNum = epNum,
-                    )
-                    if (constructed != null) {
-                        Log.i(TAG, "constructed $constructed")
-                        episodes.add(
-                            newEpisode(
-                                url = constructed,
-                                initializer = {
-                                    this.name = "${c.title} - ${sub.title}"
-                                    this.season = idx + 1
-                                    this.episode = epNum
-                                    this.posterUrl = posterFor(sub.id)
-                                },
-                                fix = false,
-                            )
+                }
+                if (hasUrls) continue
+                // all episode sections empty -> construct the R2 URLs:
+                // probe the pattern ONCE per season (all candidates in parallel),
+                // then apply the same pattern to every episode (no more HEADs)
+                val firstNum = subCards.firstNotNullOfOrNull { s ->
+                    Regex("(\\d+)").findAll(s.title).lastOrNull()?.value?.toIntOrNull()
+                } ?: continue
+                val matched = probeCandidate(folder, fallbackTitle, c.title, firstNum)
+                if (matched == null) {
+                    Log.i(TAG, "no pattern for ${fallbackTitle} ${c.title}")
+                    continue
+                }
+                Log.i(TAG, "pattern[$matched] ${fallbackTitle} ${c.title}")
+                for (sub in subCards) {
+                    val epNum = Regex("(\\d+)").findAll(sub.title).lastOrNull()?.value?.toIntOrNull() ?: continue
+                    val u = buildCandidate(folder!!, fallbackTitle, c.title, epNum, matched)
+                    episodes.add(
+                        newEpisode(
+                            url = u,
+                            initializer = {
+                                this.name = "${c.title} - ${sub.title}"
+                                this.season = idx + 1
+                                this.episode = epNum
+                                this.posterUrl = posterFor(sub.id)
+                            },
+                            fix = false,
                         )
-                    }
+                    )
                 }
             }
         }
@@ -335,43 +358,48 @@ class CartoonDubProvider : MainAPI() {
     }
 
     /**
-     * Empty episode sections: construct the R2 URL and VERIFY with a HEAD request.
-     * Known patterns (verified live):
+     * Empty episode sections: construct the R2 URL from the known patterns
+     * (verified live):
      *   invincible/المنيع الجزء الاول الحلقة 1.mp4      ("الجزء" wording, no مدبلجة)
      *   arcane/آركين الموسم الاول الحلقة 1 مدبلجة.mp4   ("الموسم" wording, with مدبلجة)
      */
-    private suspend fun constructEpisodeUrl(
-        folder: String?,
-        seriesAr: String,
-        seasonName: String,
-        epTitle: String,
-        epNum: Int?,
-    ): String? {
-        if (folder.isNullOrBlank()) return null
+    private fun buildCandidate(folder: String, seriesAr: String, seasonName: String, n: Int, variant: Int): String {
         val base = mainUrl.trimEnd('/')
         val sn = seasonName.trim()
-        val n = epNum?.toString() ?: return null
-        val snNorm = sn.replace("الأول", "الاول").replace("الثاني", "الثاني")
-        // الموسم <-> الجزء wording (the files use both)
+        val snNorm = sn.replace("الأول", "الاول")
         val part = snNorm.replace("الموسم", "الجزء")
         val partHamza = sn.replace("الموسم", "الجزء")
-        val cands = mutableListOf<String>()
-        if (sn.isNotBlank()) {
-            cands.add("$base/$folder/$seriesAr $part $n.mp4")
-            cands.add("$base/$folder/$seriesAr $partHamza $n.mp4")
-            cands.add("$base/$folder/$seriesAr $snNorm $n.mp4")
-            cands.add("$base/$folder/$seriesAr $part $n مدبلجة.mp4")
-            cands.add("$base/$folder/$seriesAr $snNorm $n مدبلجة.mp4")
+        val withSeason = listOf(
+            "$base/$folder/$seriesAr $part $n.mp4",
+            "$base/$folder/$seriesAr $partHamza $n.mp4",
+            "$base/$folder/$seriesAr $snNorm $n.mp4",
+            "$base/$folder/$seriesAr $part $n مدبلجة.mp4",
+            "$base/$folder/$seriesAr $snNorm $n مدبلجة.mp4",
+        )
+        val without = listOf(
+            "$base/$folder/$seriesAr $n.mp4",
+            "$base/$folder/$seriesAr $n مدبلجة.mp4",
+        )
+        return (withSeason + without)[variant]
+    }
+
+    /** probe ALL candidates for episode n IN PARALLEL, return the matched variant index */
+    private suspend fun probeCandidate(folder: String?, seriesAr: String, seasonName: String, n: Int): Int? {
+        if (folder.isNullOrBlank()) return null
+        return coroutineScope {
+            (0 until 7).map { v ->
+                async {
+                    try {
+                        val r = app.head(
+                            buildCandidate(folder, seriesAr, seasonName, n, v),
+                            headers = mapOf("User-Agent" to EDOROID_UA),
+                            timeout = 6,
+                        )
+                        if (r.code in 200..299) v else null
+                    } catch (_: Exception) { null }
+                }
+            }.awaitAll().filterNotNull().minOrNull()
         }
-        cands.add("$base/$folder/$seriesAr $n.mp4")
-        cands.add("$base/$folder/$seriesAr $n مدبلجة.mp4")
-        for (cand in cands) {
-            try {
-                val r = app.head(cand, headers = mapOf("User-Agent" to EDOROID_UA), timeout = 6)
-                if (r.code in 200..299) return cand
-            } catch (_: Exception) {}
-        }
-        return null
     }
 
     // ---------- links ----------
