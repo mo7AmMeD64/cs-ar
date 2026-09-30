@@ -123,7 +123,7 @@
     "iconUrl": "https://imgs1.e-droid.net/srv/imgs/cards/c4046384_8106043_main.png?v=1",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
-    "fileSize": 24574,
+    "fileSize": 24816,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -135,7 +135,7 @@
       "Anime",
       "Cartoon"
     ],
-    "version": 4,
+    "version": 5,
     "internalName": "CartoonDub",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CartoonDub.cs3",
     "name": "كرتون مدبلج"
