@@ -118,5 +118,26 @@
     "internalName": "CinemaPlus",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CinemaPlus.cs3",
     "name": "Cinema Plus"
+  },
+  {
+    "iconUrl": "https://imgs1.e-droid.net/srv/imgs/cards/c4046384_8106043_main.png?v=1",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 17945,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "TvSeries",
+      "Movie",
+      "Anime",
+      "Cartoon"
+    ],
+    "version": 1,
+    "internalName": "CartoonDub",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CartoonDub.cs3",
+    "name": "كرتون مدبلج"
   }
 ]
