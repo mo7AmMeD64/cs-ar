@@ -360,40 +360,45 @@ class CartoonDubProvider : MainAPI() {
     /**
      * Empty episode sections: construct the R2 URL from the known patterns
      * (verified live):
-     *   invincible/المنيع الجزء الاول الحلقة 1.mp4      ("الجزء" wording, no مدبلجة)
-     *   arcane/آركين الموسم الاول الحلقة 1 مدبلجة.mp4   ("الموسم" wording, with مدبلجة)
+     *   invincible/المنيع الجزء الاول الحلقة 1.mp4       ("الجزء", plain alef, no مدبلجة)
+     *   arcane/آركين الموسم الاول الحلقة 1 مدبلجة.mp4    ("الموسم", آ hamza, with مدبلجة)
+     * variant index = seriesForm × seasonForm × dubForm
      */
+    private fun hamzaVariants(s: String): List<String> {
+        val plain = s.replace('أ', 'ا').replace('آ', 'ا').replace('إ', 'ا')
+        val out = mutableListOf(s)
+        if (plain != s) out.add(plain)
+        // آ-prefixed form (e.g. أركين -> آركين) — only when not the definite article
+        if (!plain.startsWith("ال") && plain.isNotEmpty()) {
+            val alefForm = "آ" + plain.substring(1)
+            if (alefForm !in out) out.add(alefForm)
+        }
+        return out
+    }
+
     private fun buildCandidate(folder: String, seriesAr: String, seasonName: String, n: Int, variant: Int): String {
         val base = mainUrl.trimEnd('/')
-        val sn = seasonName.trim()
-        val snNorm = sn.replace("الأول", "الاول")
-        val part = snNorm.replace("الموسم", "الجزء")
-        val partHamza = sn.replace("الموسم", "الجزء")
-        val withSeason = listOf(
-            "$base/$folder/$seriesAr $part $n.mp4",
-            "$base/$folder/$seriesAr $partHamza $n.mp4",
-            "$base/$folder/$seriesAr $snNorm $n.mp4",
-            "$base/$folder/$seriesAr $part $n مدبلجة.mp4",
-            "$base/$folder/$seriesAr $snNorm $n مدبلجة.mp4",
-        )
-        val without = listOf(
-            "$base/$folder/$seriesAr $n.mp4",
-            "$base/$folder/$seriesAr $n مدبلجة.mp4",
-        )
-        return (withSeason + without)[variant]
+        val sn = seasonName.trim().replace('أ', 'ا').replace('آ', 'ا').replace('إ', 'ا')
+        val seasonForms = listOf(sn.replace("الموسم", "الجزء"), sn) // الجزء first (verified)
+        val seriesForms = hamzaVariants(seriesAr.trim())
+        val dubForms = listOf("", " مدبلجة")
+        val d = variant % 2
+        val sf = (variant / 2) % 2
+        val se = variant / 4
+        return "$base/$folder/${seriesForms[se]} ${seasonForms[sf]} الحلقة $n${dubForms[d]}.mp4"
     }
 
     /** probe ALL candidates for episode n IN PARALLEL, return the matched variant index */
     private suspend fun probeCandidate(folder: String?, seriesAr: String, seasonName: String, n: Int): Int? {
         if (folder.isNullOrBlank()) return null
         return coroutineScope {
-            (0 until 7).map { v ->
+            (0 until 12).map { v ->
                 async {
                     try {
                         val r = app.head(
                             buildCandidate(folder, seriesAr, seasonName, n, v),
                             headers = mapOf("User-Agent" to EDOROID_UA),
-                            timeout = 6,
+                            timeout = 10,
                         )
                         if (r.code in 200..299) v else null
                     } catch (_: Exception) { null }
