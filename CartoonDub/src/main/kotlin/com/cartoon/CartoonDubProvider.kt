@@ -6,6 +6,12 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * CartoonDub (كرتون مدبلج, AppCreator24 idapp=4046384) — CloudStream provider.
@@ -38,6 +44,8 @@ class CartoonDubProvider : MainAPI() {
             "https://srv11.e-droid.net/srv/obtener_cards.php?idusu=1234567890&ind_ini=0&idsec=%s"
         private const val EDOROID_UA = "Android Vinebre Software"
         private const val CARD_IMG = "https://imgs1.e-droid.net/srv/imgs/cards/o4046384_%s.png"
+        private const val TMDB_API = "https://api.themoviedb.org/3"
+        private const val TMDB_KEY = "06f120992cfacd7c118f6e7086d23544"
         private val EMPTY_MARKERS = setOf("", "0", "FFFFFFFF")
     }
 
@@ -94,6 +102,37 @@ class CartoonDubProvider : MainAPI() {
 
     private fun posterFor(cardId: String?): String? =
         cardId?.takeIf { it.isNotBlank() && it != "FFFFFFFF" }?.let { CARD_IMG.format(it) }
+
+    private fun JsonObject.str(vararg keys: String): String? {
+        for (k in keys) {
+            val v = this[k]?.jsonPrimitive?.contentOrNull
+            if (v != null && v != "null") return v
+        }
+        return null
+    }
+
+    /** TMDB tv search (only 200) — for the Latin folder name used in the R2 URLs.
+     *  Tries Arabic hamza variants: TMDB search only matches the exact form (آركين vs أركين). */
+    private suspend fun tmdbSearchTv(query: String): JsonObject? {
+        val variants = listOf(
+            query,
+            query.replace('أ', 'آ').replace('إ', 'آ'),
+            query.replace('آ', 'أ').replace('إ', 'أ'),
+        ).distinct()
+        for (q in variants) {
+            try {
+                val r = app.get(
+                    "$TMDB_API/search/tv",
+                    params = mapOf("api_key" to TMDB_KEY, "query" to q, "language" to "ar"),
+                )
+                if (r.code != 200) continue
+                val j = Json.parseToJsonElement(r.text).jsonObject
+                val results = j["results"]?.jsonArray
+                if (!results.isNullOrEmpty()) return j
+            } catch (_: Exception) {}
+        }
+        return null
+    }
 
     // ---------- main page ----------
 
@@ -197,6 +236,10 @@ class CartoonDubProvider : MainAPI() {
         }
 
         // cards with targets -> flatten: collect all sub-sections' episodes with seasons
+        // folder for constructed URLs: TMDB original_name's first word (e.g. "Arcane" -> "arcane")
+        val folder = tmdbSearchTv(fallbackTitle)?.get("results")?.jsonArray?.firstOrNull()
+            ?.jsonObject?.str("original_name", "name")
+            ?.trim()?.split(" ")?.firstOrNull()?.lowercase()
         val episodes = mutableListOf<Episode>()
         for ((idx, c) in cards.withIndex()) {
             val target = c.target ?: continue
@@ -220,19 +263,48 @@ class CartoonDubProvider : MainAPI() {
                     )
                 }
             } else {
-                // deeper nesting: sub-section links to episode sections
+                // deeper nesting: episode cards point to (often EMPTY) episode sections;
+                // the app used its history cache for these — construct the R2 URL instead
                 for (sub in subCards) {
                     val subTarget = sub.target ?: continue
-                    val epCards = getCards(subTarget).filter { it.url != null }
-                    for (ec in epCards) {
-                        val epNum = Regex("(\\d+)").findAll(ec.title).lastOrNull()?.value?.toIntOrNull()
+                    val epCards = getCards(subTarget)
+                    val withUrls = epCards.filter { it.url != null }
+                    if (withUrls.isNotEmpty()) {
+                        for (ec in withUrls) {
+                            val epNum = Regex("(\\d+)").findAll(ec.title).lastOrNull()?.value?.toIntOrNull()
+                            episodes.add(
+                                newEpisode(
+                                    url = ec.url!!,
+                                    initializer = {
+                                        this.name = "${c.title} - ${sub.title.ifBlank { ec.title }}"
+                                        this.season = idx + 1
+                                        this.episode = epNum
+                                    },
+                                    fix = false,
+                                )
+                            )
+                        }
+                        continue
+                    }
+                    // empty episode section -> construct + verify the R2 URL
+                    val epNum = Regex("(\\d+)").findAll(sub.title).lastOrNull()?.value?.toIntOrNull()
+                    val constructed = constructEpisodeUrl(
+                        folder = folder,
+                        seriesAr = fallbackTitle,
+                        seasonName = c.title,
+                        epTitle = sub.title,
+                        epNum = epNum,
+                    )
+                    if (constructed != null) {
+                        Log.i(TAG, "constructed $constructed")
                         episodes.add(
                             newEpisode(
-                                url = ec.url!!,
+                                url = constructed,
                                 initializer = {
-                                    this.name = "${c.title} - ${sub.title.ifBlank { ec.title }}"
+                                    this.name = "${c.title} - ${sub.title}"
                                     this.season = idx + 1
                                     this.episode = epNum
+                                    this.posterUrl = posterFor(sub.id)
                                 },
                                 fix = false,
                             )
@@ -243,6 +315,39 @@ class CartoonDubProvider : MainAPI() {
         }
         if (episodes.isEmpty()) return null
         return newTvSeriesLoadResponse(fallbackTitle, url, TvType.TvSeries, episodes) {}
+    }
+
+    /**
+     * Empty episode sections: construct the R2 URL from the known pattern
+     * /{folder}/{seriesArabic} [{seasonName} ]{episodeNum} مدبلجة.mp4 and VERIFY with a HEAD request.
+     */
+    private suspend fun constructEpisodeUrl(
+        folder: String?,
+        seriesAr: String,
+        seasonName: String,
+        epTitle: String,
+        epNum: Int?,
+    ): String? {
+        if (folder.isNullOrBlank()) return null
+        val base = mainUrl.trimEnd('/')
+        val sn = seasonName.trim()
+        val n = epNum?.toString() ?: return null
+        val snNorm = sn.replace("الأول", "الاول")
+        val cands = mutableListOf<String>()
+        if (sn.isNotBlank()) {
+            cands.add("$base/$folder/$seriesAr $sn $n مدبلجة.mp4")
+            cands.add("$base/$folder/$seriesAr $snNorm $n مدبلجة.mp4")
+            cands.add("$base/$folder/$seriesAr $sn $n.mp4")
+        }
+        cands.add("$base/$folder/$seriesAr $n مدبلجة.mp4")
+        cands.add("$base/$folder/$seriesAr $n.mp4")
+        for (cand in cands) {
+            try {
+                val r = app.head(cand, headers = mapOf("User-Agent" to EDOROID_UA))
+                if (r.code in 200..299) return cand
+            } catch (_: Exception) {}
+        }
+        return null
     }
 
     // ---------- links ----------
