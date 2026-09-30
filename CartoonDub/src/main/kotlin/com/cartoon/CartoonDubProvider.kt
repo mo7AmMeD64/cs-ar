@@ -47,6 +47,14 @@ class CartoonDubProvider : MainAPI() {
         private const val TMDB_API = "https://api.themoviedb.org/3"
         private const val TMDB_KEY = "06f120992cfacd7c118f6e7086d23544"
         private val EMPTY_MARKERS = setOf("", "0", "FFFFFFFF")
+
+        // verified R2 folders (the shared TMDB key gets rate-limited -> don't depend on it)
+        private val FOLDER_MAP = mapOf(
+            "أركين" to "arcane",
+            "المنيع" to "invincible",
+            "بن 10" to "ben",
+            "بن تن" to "ben",
+        )
     }
 
     // ---------- cards parsing ----------
@@ -237,10 +245,12 @@ class CartoonDubProvider : MainAPI() {
         }
 
         // cards with targets -> flatten: collect all sub-sections' episodes with seasons
-        // folder for constructed URLs: TMDB original_name's first word (e.g. "Arcane" -> "arcane")
-        val folder = tmdbSearchTv(fallbackTitle)?.get("results")?.jsonArray?.firstOrNull()
-            ?.jsonObject?.str("original_name", "name")
-            ?.trim()?.split(" ")?.firstOrNull()?.lowercase()
+        // folder for constructed URLs: the verified map first (TMDB gets rate-limited),
+        // then the TMDB original_name's first word (e.g. "Arcane" -> "arcane")
+        val folder = FOLDER_MAP[fallbackTitle.trim()]
+            ?: tmdbSearchTv(fallbackTitle)?.get("results")?.jsonArray?.firstOrNull()
+                ?.jsonObject?.str("original_name", "name")
+                ?.trim()?.split(" ")?.firstOrNull()?.lowercase()
         val episodes = mutableListOf<Episode>()
         for ((idx, c) in cards.withIndex()) {
             val target = c.target ?: continue
@@ -357,7 +367,7 @@ class CartoonDubProvider : MainAPI() {
         cands.add("$base/$folder/$seriesAr $n مدبلجة.mp4")
         for (cand in cands) {
             try {
-                val r = app.head(cand, headers = mapOf("User-Agent" to EDOROID_UA))
+                val r = app.head(cand, headers = mapOf("User-Agent" to EDOROID_UA), timeout = 6)
                 if (r.code in 200..299) return cand
             } catch (_: Exception) {}
         }
