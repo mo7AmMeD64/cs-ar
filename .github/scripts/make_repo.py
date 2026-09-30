@@ -60,6 +60,14 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie"],
         "language": "ar",
     },
+    {
+        "internalName": "CartoonDub",
+        "name": "كرتون مدبلج",
+        "iconUrl": "https://imgs1.e-droid.net/srv/imgs/cards/c4046384_8106043_main.png?v=1",
+        "version": 1,
+        "tvTypes": ["TvSeries", "Movie", "Anime", "Cartoon"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
