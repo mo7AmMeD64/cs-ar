@@ -13,12 +13,15 @@ import com.lagradost.cloudstream3.utils.newExtractorLink
  * Architecture (from cartoondub.har + live verification):
  * - Sections API: https://srv11.e-droid.net/srv/obtener_cards.php?idusu={any}&ind_ini=0&idsec={id}
  *   (requires User-Agent "Android Vinebre Software", responses gzip)
- * - Card format: ;{id},1,,{f},{n},{TITLE},{color},{size},{YEAR},{color2},{size2},{TARGET},{URL},0,
+ * - Card format (14 fixed fields, title may contain commas):
+ *     ;{id},1,,{f},{n},{TITLE},{color},{size},{YEAR},{color2},{size2},{TARGET},{URL},0
  *     [11] target section id (0/FFFFFFFF = none)  -> navigation
  *     [12] URL (FFFFFFFF/empty = none)            -> direct MP4 (playable!)
- * - Video: public Cloudflare R2 bucket, direct MP4, no encryption/signature:
- *     https://pub-b534f19ddae84293ae0e0fb360695fcf.r2.dev/ben/بن 10 الحلقة 1 مدبلجة.mp4
- * - Hierarchy: 38314274 (الرئيسية) → series → seasons → episodes
+ * - Video: public Cloudflare R2 bucket, direct MP4, no encryption/signature
+ * - Card posters: https://imgs1.e-droid.net/srv/imgs/cards/o4046384_{cardId}.png
+ * - NOTE: CloudStream fixUrl()s the response urls (prepends mainUrl) — the mangled
+ *   url still contains "cartoondub://" so load()/loadLinks must check THAT first,
+ *   NOT url.startsWith("http") (the mangled url would take the movie path -> 404).
  */
 class CartoonDubProvider : MainAPI() {
 
@@ -34,6 +37,7 @@ class CartoonDubProvider : MainAPI() {
         private const val CARDS_URL =
             "https://srv11.e-droid.net/srv/obtener_cards.php?idusu=1234567890&ind_ini=0&idsec=%s"
         private const val EDOROID_UA = "Android Vinebre Software"
+        private const val CARD_IMG = "https://imgs1.e-droid.net/srv/imgs/cards/o4046384_%s.png"
         private val EMPTY_MARKERS = setOf("", "0", "FFFFFFFF")
     }
 
@@ -50,24 +54,25 @@ class CartoonDubProvider : MainAPI() {
     private fun parseCards(body: String): List<Card> {
         if (!body.startsWith("ANDROID:OK")) return emptyList()
         val out = mutableListOf<Card>()
-        // segments after the DATOS header (the first is the section's own card)
         val segments = body.substringAfter("DATOS:").split(";")
         for (seg in segments.drop(1)) {
             val t = seg.trim()
             if (t.isEmpty() || t == "N" || t.startsWith("ANDROID")) continue
-            val f = t.split(",")
-            if (f.size < 12) continue
-            // parse from the END (titles may contain commas)
-            val flag = f[f.size - 2].trim()          // last "0"
-            val url = f[f.size - 3].trim()           // URL or FFFFFFFF/empty
-            val target = f[f.size - 4].trim()        // target section or 0/FFFFFFFF
-            val title = f.subList(5, f.size - 5).joinToString(",").trim()
+            val f = t.split(",").toMutableList()
+            while (f.isNotEmpty() && f.last().isBlank()) f.removeAt(f.size - 1)
+            if (f.size < 14) continue
+            // 8 fixed fields at the end: color,size,YEAR,color2,size2,TARGET,URL,flag
+            val flag = f[f.size - 1].trim()
+            val url = f[f.size - 2].trim()
+            val target = f[f.size - 3].trim()
+            val year = f[f.size - 6].trim()
+            val title = f.subList(5, f.size - 8).joinToString(",").trim()
             if (title.isEmpty() && url.isBlank()) continue
             out.add(
                 Card(
                     id = f[0].trim(),
                     title = title,
-                    year = f.getOrNull(8)?.trim()?.takeIf { it.isNotBlank() && it != "FFFFFFFF" },
+                    year = year.takeIf { it.isNotBlank() && it != "FFFFFFFF" },
                     target = target.takeUnless { it in EMPTY_MARKERS },
                     url = url.takeUnless { it in EMPTY_MARKERS },
                 )
@@ -87,6 +92,9 @@ class CartoonDubProvider : MainAPI() {
         emptyList()
     }
 
+    private fun posterFor(cardId: String?): String? =
+        cardId?.takeIf { it.isNotBlank() && it != "FFFFFFFF" }?.let { CARD_IMG.format(it) }
+
     // ---------- main page ----------
 
     override val mainPage = mainPageOf(
@@ -99,13 +107,14 @@ class CartoonDubProvider : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val cards = getCards(request.data)
         val items = cards.map { c ->
-            val type = if (c.url != null) TvType.Movie else TvType.TvSeries
+            val isMovie = c.url != null
             newTvSeriesSearchResponse(
                 c.title,
-                if (c.url != null) c.url else "cartoondub://sec/${c.target}:${c.title}",
-                type,
+                if (isMovie) c.url!! else "cartoondub://sec/${c.target}:${c.title}",
+                if (isMovie) TvType.Movie else TvType.TvSeries,
             ) {
                 this.year = c.year?.toIntOrNull()
+                this.posterUrl = posterFor(c.id)
             }
         }
         return newHomePageResponse(request.name, items)
@@ -121,13 +130,17 @@ class CartoonDubProvider : MainAPI() {
         for (section in listOf("38314274", "38314276", "38314275", "38314278")) {
             for (c in getCards(section)) {
                 if (!c.title.lowercase().contains(q)) continue
-                val url = if (c.url != null) c.url else "cartoondub://sec/${c.target}:${c.title}"
+                val isMovie = c.url != null
+                val url = if (isMovie) c.url!! else "cartoondub://sec/${c.target}:${c.title}"
                 if (!seen.add(url)) continue
                 out.add(
                     newTvSeriesSearchResponse(
                         c.title, url,
-                        if (c.url != null) TvType.Movie else TvType.TvSeries,
-                    ) { this.year = c.year?.toIntOrNull() }
+                        if (isMovie) TvType.Movie else TvType.TvSeries,
+                    ) {
+                        this.year = c.year?.toIntOrNull()
+                        this.posterUrl = posterFor(c.id)
+                    }
                 )
             }
         }
@@ -137,8 +150,11 @@ class CartoonDubProvider : MainAPI() {
     // ---------- load ----------
 
     override suspend fun load(url: String): LoadResponse? {
-        // url: cartoondub://sec/{sectionId}:{title}  |  a direct mp4 URL (movie)
-        if (url.startsWith("http")) {
+        // NOTE: the url may be mangled by CloudStream's fixUrl (mainUrl prepended);
+        // check "cartoondub://" FIRST — the mangled url starts with http!
+        if (!url.contains("cartoondub://")) {
+            // a real direct mp4 (only when it is a genuine R2 url)
+            if (!url.startsWith("http")) return null
             val title = java.net.URLDecoder.decode(url.substringAfterLast("/"), "UTF-8")
                 .substringBeforeLast(".")
             return newMovieLoadResponse(title, url, TvType.Movie, url) {}
@@ -153,9 +169,16 @@ class CartoonDubProvider : MainAPI() {
         val cards = getCards(sectionId)
         if (cards.isEmpty()) return null
 
-        // any card with a URL -> this section IS a season (episodes)
         val urlCards = cards.filter { it.url != null }
+        if (urlCards.size == 1 && cards.size <= 2) {
+            // a single playable card -> MOVIE
+            val c = urlCards[0]
+            return newMovieLoadResponse(c.title, url, TvType.Movie, c.url!!) {
+                this.posterUrl = posterFor(c.id)
+            }
+        }
         if (urlCards.isNotEmpty()) {
+            // this section IS a season (episodes)
             val seriesTitle = fallbackTitle.substringBefore(" الموسم").trim()
             val episodes = urlCards.mapIndexed { idx, c ->
                 val epNum = Regex("(\\d+)").findAll(c.title).lastOrNull()?.value?.toIntOrNull() ?: (idx + 1)
@@ -165,6 +188,7 @@ class CartoonDubProvider : MainAPI() {
                         this.name = c.title
                         this.episode = epNum
                         this.season = 1
+                        this.posterUrl = posterFor(c.id)
                     },
                     fix = false,
                 )
@@ -179,7 +203,6 @@ class CartoonDubProvider : MainAPI() {
             val subCards = getCards(target)
             val subUrls = subCards.filter { it.url != null }
             if (subUrls.isNotEmpty()) {
-                // this sub-section is a season of the series
                 val seasonNum = idx + 1
                 for (sub in subUrls) {
                     val epNum = Regex("(\\d+)").findAll(sub.title).lastOrNull()?.value?.toIntOrNull()
@@ -190,6 +213,7 @@ class CartoonDubProvider : MainAPI() {
                                 this.name = "${c.title} - ${sub.title}"
                                 this.season = seasonNum
                                 this.episode = epNum
+                                this.posterUrl = posterFor(sub.id)
                             },
                             fix = false,
                         )
@@ -229,7 +253,9 @@ class CartoonDubProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
-        // data IS the direct R2 MP4 URL
+        // NOTE: the data may be the mangled load url (mainUrl + cartoondub://sec/...)
+        // — check "cartoondub://" FIRST, not startsWith("http")!
+        if (data.contains("cartoondub://")) return false   // a section url, not a link
         if (!data.startsWith("http")) return false
         Log.i(TAG, "loadLinks $data")
         callback(
