@@ -68,7 +68,8 @@ class CartoonDubProvider : MainAPI() {
             if (t.isEmpty() || t == "N" || t.startsWith("ANDROID")) continue
             val f = t.split(",").toMutableList()
             while (f.isNotEmpty() && f.last().isBlank()) f.removeAt(f.size - 1)
-            if (f.size < 14) continue
+            // layout/section-own cards have field[1]='0'; real cards have '1'
+            if (f.size < 14 || f[1].trim() != "1") continue
             // 8 fixed fields at the end: color,size,YEAR,color2,size2,TARGET,URL,flag
             val flag = f[f.size - 1].trim()
             val url = f[f.size - 2].trim()
@@ -313,13 +314,21 @@ class CartoonDubProvider : MainAPI() {
                 }
             }
         }
-        if (episodes.isEmpty()) return null
+        if (episodes.isEmpty()) {
+            // still return a response (the page opens) instead of "Error loading"
+            return newTvSeriesLoadResponse(fallbackTitle, url, TvType.TvSeries, emptyList()) {
+                this.posterUrl = cards.firstOrNull()?.let { posterFor(it.id) }
+                this.plot = null
+            }
+        }
         return newTvSeriesLoadResponse(fallbackTitle, url, TvType.TvSeries, episodes) {}
     }
 
     /**
-     * Empty episode sections: construct the R2 URL from the known pattern
-     * /{folder}/{seriesArabic} [{seasonName} ]{episodeNum} مدبلجة.mp4 and VERIFY with a HEAD request.
+     * Empty episode sections: construct the R2 URL and VERIFY with a HEAD request.
+     * Known patterns (verified live):
+     *   invincible/المنيع الجزء الاول الحلقة 1.mp4      ("الجزء" wording, no مدبلجة)
+     *   arcane/آركين الموسم الاول الحلقة 1 مدبلجة.mp4   ("الموسم" wording, with مدبلجة)
      */
     private suspend fun constructEpisodeUrl(
         folder: String?,
@@ -332,15 +341,20 @@ class CartoonDubProvider : MainAPI() {
         val base = mainUrl.trimEnd('/')
         val sn = seasonName.trim()
         val n = epNum?.toString() ?: return null
-        val snNorm = sn.replace("الأول", "الاول")
+        val snNorm = sn.replace("الأول", "الاول").replace("الثاني", "الثاني")
+        // الموسم <-> الجزء wording (the files use both)
+        val part = snNorm.replace("الموسم", "الجزء")
+        val partHamza = sn.replace("الموسم", "الجزء")
         val cands = mutableListOf<String>()
         if (sn.isNotBlank()) {
-            cands.add("$base/$folder/$seriesAr $sn $n مدبلجة.mp4")
+            cands.add("$base/$folder/$seriesAr $part $n.mp4")
+            cands.add("$base/$folder/$seriesAr $partHamza $n.mp4")
+            cands.add("$base/$folder/$seriesAr $snNorm $n.mp4")
+            cands.add("$base/$folder/$seriesAr $part $n مدبلجة.mp4")
             cands.add("$base/$folder/$seriesAr $snNorm $n مدبلجة.mp4")
-            cands.add("$base/$folder/$seriesAr $sn $n.mp4")
         }
-        cands.add("$base/$folder/$seriesAr $n مدبلجة.mp4")
         cands.add("$base/$folder/$seriesAr $n.mp4")
+        cands.add("$base/$folder/$seriesAr $n مدبلجة.mp4")
         for (cand in cands) {
             try {
                 val r = app.head(cand, headers = mapOf("User-Agent" to EDOROID_UA))

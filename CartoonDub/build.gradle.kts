@@ -1,4 +1,4 @@
-version = 3
+version = 4
 
 cloudstream {
     description = "كرتون ومسلسلات مدبلجة — MP4 مباشر (بن 10، ون بيس، أفاتار، سبايدرمان...)"
