@@ -12,6 +12,8 @@ import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.net.URI
 import java.net.URLDecoder
@@ -25,7 +27,6 @@ import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.math.roundToInt
 
 /**
  * Cima Cloud (cima-cloud.com app) — CloudStream provider.
@@ -186,9 +187,6 @@ class CimaCloudProvider : MainAPI() {
     private fun JsonObject.yearValue(): Int? =
         int("year") ?: str("release_date")?.take(4)?.toIntOrNull()
 
-    private fun JsonObject.ratingValue(): Int? =
-        str("vote_average")?.toDoubleOrNull()?.roundToInt()?.coerceIn(0, 10)
-
     private fun serverLabel(url: String): String {
         val host = hostOf(url) ?: return "سيرفر"
         val clean = host.removePrefix("www.").removePrefix("s1.")
@@ -313,7 +311,7 @@ class CimaCloudProvider : MainAPI() {
             }
             app.post(
                 "${apiBase()}$API/$path",
-                requestBody = body,
+                requestBody = body.toRequestBody("application/x-www-form-urlencoded".toMediaType()),
                 headers = mapOf(
                     "User-Agent" to UA_OKHTTP,
                     "Content-Type" to "application/x-www-form-urlencoded",
@@ -464,7 +462,7 @@ class CimaCloudProvider : MainAPI() {
                 this.plot = m.str("overview")?.trim()
                 this.tags = m.tagNames()
                 this.year = m.yearValue()
-                this.rating = m.ratingValue()
+                this.score = Score.from10(m.str("vote_average")?.toFloatOrNull())
                 this.duration = m.str("runtime")?.toIntOrNull()
                 addTrailer(m.str("trailer")?.takeIf { it.startsWith("http") })
             }
@@ -508,7 +506,7 @@ class CimaCloudProvider : MainAPI() {
                 this.plot = s.str("overview")?.trim()
                 this.tags = s.tagNames()
                 this.year = s.yearValue()
-                this.rating = s.ratingValue()
+                this.score = Score.from10(s.str("vote_average")?.toFloatOrNull())
                 addTrailer(s.str("trailer")?.takeIf { it.startsWith("http") })
             }
         }
@@ -787,7 +785,7 @@ class CimaCloudProvider : MainAPI() {
                     source = name, name = label, url = url,
                     type = if (clean.endsWith(".m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO,
                 ) {
-                    this.referer = referer
+                    this.referer = referer ?: ""
                     this.quality = Regex("""(\d{3,4})p""").find(label)?.value
                         ?.let { getQualityFromName(it) }
                         ?: Qualities.Unknown.value
