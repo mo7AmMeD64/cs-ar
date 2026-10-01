@@ -68,6 +68,14 @@ PLUGINS = [
         "tvTypes": ["TvSeries", "Movie", "Anime", "Cartoon"],
         "language": "ar",
     },
+    {
+        "internalName": "CimaCloud",
+        "name": "Cima Cloud",
+        "iconUrl": None,
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
