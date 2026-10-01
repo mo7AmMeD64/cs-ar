@@ -2,6 +2,8 @@
 
 To add another plugin: create its folder (with build.gradle.kts), then add an
 entry to PLUGINS below. To publish an update, bump that entry's "version".
+A plugin with a "file" key is shipped PREBUILT: the .cs3 is committed as-is
+(no build.gradle.kts in its folder, so gradle never builds it).
 """
 import json
 import os
@@ -76,12 +78,21 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie"],
         "language": "ar",
     },
+    {
+        "internalName": "MovieBoxProvider",
+        "name": "MovieBox",
+        "iconUrl": None,
+        "version": 51,
+        "tvTypes": ["Movie", "TvSeries"],
+        "language": "hi",
+        "file": "MovieBox/MovieBoxProvider.cs3",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
 entries = []
 for p in PLUGINS:
-    built = f"{p['internalName']}/build/{p['internalName']}.cs3"
+    built = p.get("file") or f"{p['internalName']}/build/{p['internalName']}.cs3"
     if not os.path.exists(built):
         raise SystemExit(f"missing build output: {built}")
     shutil.copy(built, "repo/")

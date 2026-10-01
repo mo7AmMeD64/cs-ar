@@ -13,6 +13,7 @@ Repo URL:
 | Shabakaty Cinemana | cinemana.shabakaty.cc |
 | Cinema Box | cinema.albox.co (API v4) |
 | Cima Cloud | cima-cloud.com (API 1654865.xyz — تطبيق CimaCloud 1.3) |
+| MovieBox | movie-box.co (تطبيق MovieBox — ملف .cs3 جاهز، بدون مصدر) |
 
 ## اضافة اضافة جديدة
 1. انشئ مجلدا بجانب `CinemaBox/` (فيه `build.gradle.kts` و `src/main/...`).
