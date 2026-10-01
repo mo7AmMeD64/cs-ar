@@ -160,5 +160,24 @@
     "internalName": "CimaCloud",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CimaCloud.cs3",
     "name": "Cima Cloud"
+  },
+  {
+    "iconUrl": null,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 93548,
+    "status": 1,
+    "language": "hi",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 51,
+    "internalName": "MovieBoxProvider",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/MovieBoxProvider.cs3",
+    "name": "MovieBox"
   }
 ]
