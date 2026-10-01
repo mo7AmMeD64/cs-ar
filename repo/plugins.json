@@ -144,7 +144,7 @@
     "iconUrl": null,
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
-    "fileSize": 44919,
+    "fileSize": 45258,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -156,7 +156,7 @@
       "Anime",
       "AnimeMovie"
     ],
-    "version": 1,
+    "version": 2,
     "internalName": "CimaCloud",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/CimaCloud.cs3",
     "name": "Cima Cloud"
