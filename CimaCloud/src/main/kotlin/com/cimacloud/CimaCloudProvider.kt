@@ -193,6 +193,21 @@ class CimaCloudProvider : MainAPI() {
         return "سيرفر ${clean.substringBefore('.')}"
     }
 
+    /**
+     * CloudStream absolutizes our relative URLs (fixUrl / watch history prefix
+     * mainUrl), so accept both "series/123" and "https://<host>/series/123".
+     * Returns (kind, id) with kind in {movie, series, ep} or null.
+     */
+    private fun parseTarget(raw: String): Pair<String, String>? {
+        var u = raw.trim()
+        Regex("""(?i)^[a-z]+://[^/]+/""").find(u)?.let { u = u.substring(it.value.length) }
+        u = u.substringBefore('?').substringBefore('#')
+        val parts = u.trim('/').split('/')
+        val kind = parts.getOrNull(0)?.lowercase()
+        val id = parts.getOrNull(1)?.takeIf { it.isNotBlank() } ?: return null
+        return if (kind == "movie" || kind == "series" || kind == "ep") kind to id else null
+    }
+
     // ================================================================ crypto
 
     private fun md5Hex(text: String): String =
@@ -445,8 +460,7 @@ class CimaCloudProvider : MainAPI() {
     // ================================================================ load
 
     override suspend fun load(url: String): LoadResponse? {
-        val kind = url.substringBefore("/")
-        val id = url.substringAfter("/", "").ifBlank { return null }
+        val (kind, id) = parseTarget(url) ?: return null
 
         if (kind == "movie") {
             val res = apiGet("movie/$id", mapOf("firebase_id" to makeFirebaseId()))
@@ -522,8 +536,7 @@ class CimaCloudProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
-        val kind = data.substringBefore("/")
-        val id = data.substringAfter("/", "")
+        val (kind, id) = parseTarget(data) ?: return false
         val path = when (kind) {
             "movie" -> "movie/$id/servers"
             "ep" -> "episode/$id/servers"

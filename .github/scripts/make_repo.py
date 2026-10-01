@@ -72,7 +72,7 @@ PLUGINS = [
         "internalName": "CimaCloud",
         "name": "Cima Cloud",
         "iconUrl": None,
-        "version": 1,
+        "version": 2,
         "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie"],
         "language": "ar",
     },
