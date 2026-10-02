@@ -87,6 +87,14 @@ PLUGINS = [
         "language": "hi",
         "file": "MovieBox/MovieBoxProvider.cs3",
     },
+    {
+        "internalName": "Egydead",
+        "name": "EgyDead",
+        "iconUrl": "https://yt3.googleusercontent.com/ytc/AIdro_kgVTM6DJtx3tcS4gkPOOPnwFXKNhsrFyMRigWOlWomuQ=s900-c-k-c0x00ffffff-no-rj",
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries", "Anime", "AsianDrama"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
