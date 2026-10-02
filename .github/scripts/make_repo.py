@@ -82,7 +82,7 @@ PLUGINS = [
         "internalName": "MovieBoxProvider",
         "name": "MovieBox",
         "iconUrl": None,
-        "version": 51,
+        "version": 52,
         "tvTypes": ["Movie", "TvSeries"],
         "language": "hi",
         "file": "MovieBox/MovieBoxProvider.cs3",
