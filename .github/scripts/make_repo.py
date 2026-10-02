@@ -119,6 +119,14 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries"],
         "language": "ar",
     },
+    {
+        "internalName": "Stardima",
+        "name": "ستارديما",
+        "iconUrl": "https://web8.topcinema.cam/wp-content/uploads/2023/05/cropped-icon-32x32.png",
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries", "Cartoon", "Anime"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
