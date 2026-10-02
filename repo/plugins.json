@@ -258,5 +258,26 @@
     "internalName": "Topcinema",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Topcinema.cs3",
     "name": "Top Cinema"
+  },
+  {
+    "iconUrl": "https://web8.topcinema.cam/wp-content/uploads/2023/05/cropped-icon-32x32.png",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 21663,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Cartoon",
+      "Anime"
+    ],
+    "version": 1,
+    "internalName": "Stardima",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Stardima.cs3",
+    "name": "ستارديما"
   }
 ]
