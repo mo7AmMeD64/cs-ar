@@ -179,5 +179,26 @@
     "internalName": "MovieBoxProvider",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/MovieBoxProvider.cs3",
     "name": "MovieBox"
+  },
+  {
+    "iconUrl": "https://yt3.googleusercontent.com/ytc/AIdro_kgVTM6DJtx3tcS4gkPOOPnwFXKNhsrFyMRigWOlWomuQ=s900-c-k-c0x00ffffff-no-rj",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 53231,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Anime",
+      "AsianDrama"
+    ],
+    "version": 1,
+    "internalName": "Egydead",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Egydead.cs3",
+    "name": "EgyDead"
   }
 ]
