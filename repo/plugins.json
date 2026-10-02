@@ -279,5 +279,25 @@
     "internalName": "Stardima",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Stardima.cs3",
     "name": "ستارديما"
+  },
+  {
+    "iconUrl": "https://yt3.googleusercontent.com/ulm35tweg3do5istps0TgCjMmJSVczGUL2NIrXMwI1DDRi5ty29BIzQSUHVgqZN5CSo1PHhiA6M=s900-c-k-c0x00ffffff-no-rj",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
+    "fileSize": 24530,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "TvSeries",
+      "Live",
+      "Movie"
+    ],
+    "version": 1,
+    "internalName": "Yacintv",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/Yacintv.cs3",
+    "name": "Yacine TV"
   }
 ]
