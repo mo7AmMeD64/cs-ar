@@ -127,6 +127,14 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Cartoon", "Anime"],
         "language": "ar",
     },
+    {
+        "internalName": "Yacintv",
+        "name": "Yacine TV",
+        "iconUrl": "https://yt3.googleusercontent.com/ulm35tweg3do5istps0TgCjMmJSVczGUL2NIrXMwI1DDRi5ty29BIzQSUHVgqZN5CSo1PHhiA6M=s900-c-k-c0x00ffffff-no-rj",
+        "version": 1,
+        "tvTypes": ["TvSeries", "Live", "Movie"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
