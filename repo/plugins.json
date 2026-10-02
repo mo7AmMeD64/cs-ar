@@ -165,7 +165,7 @@
     "iconUrl": null,
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-cinemana",
-    "fileSize": 93548,
+    "fileSize": 92416,
     "status": 1,
     "language": "hi",
     "authors": [
@@ -175,7 +175,7 @@
       "Movie",
       "TvSeries"
     ],
-    "version": 51,
+    "version": 52,
     "internalName": "MovieBoxProvider",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/MovieBoxProvider.cs3",
     "name": "MovieBox"
