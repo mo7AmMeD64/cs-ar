@@ -95,6 +95,30 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Anime", "AsianDrama"],
         "language": "ar",
     },
+    {
+        "internalName": "Anim3rb",
+        "name": "Anime3rb",
+        "iconUrl": "https://images.anime3rb.com/favicon/apple-touch-icon.png",
+        "version": 1,
+        "tvTypes": ["TvSeries", "Anime"],
+        "language": "ar",
+    },
+    {
+        "internalName": "Anime-Phoenix",
+        "name": "Anime Phoenix",
+        "iconUrl": "https://yt3.googleusercontent.com/mBIIR5cqQC4Y-o7HaxbkJfs305X6tbHLSNPk6MRMCDJsH8xP0SfGhK-CBDpSmH95wSff9z99sg=s900-c-k-c0x00ffffff-no-rj",
+        "version": 1,
+        "tvTypes": ["TvSeries", "Anime", "Movie"],
+        "language": "ar",
+    },
+    {
+        "internalName": "Topcinema",
+        "name": "Top Cinema",
+        "iconUrl": "https://web8.topcinema.cam/wp-content/uploads/2023/05/cropped-icon-32x32.png",
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
