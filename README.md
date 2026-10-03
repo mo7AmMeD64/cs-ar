@@ -12,7 +12,6 @@
 https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/repo.json
 </p>
 
-
 <p>إذا لم يفتح الرابط، غيّر الـ DNS من إعدادات كلاود ستريم ⚙️</p>
 
 <h2>🧩 الإضافات المتوفرة</h2>
@@ -77,4 +76,8 @@ We hereby issue this notice to clarify that these extensions function similarly 
 
 <p align="center">
 💖 <b>استمتع بالمشاهدة ولا تنس مشاركة الإضافات مع الأصدقاء!</b>
+</p>
+
+<p align="center">
+🙏 شكر وامتنان للمطوّر <a href="https://github.com/Abodabodd">Abodabodd</a> على المصادر التي استفدت منها
 </p>
