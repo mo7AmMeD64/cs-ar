@@ -84,7 +84,7 @@ class ArabSeedProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val cards = cardsFrom(get(mainUrl + request.data))
+        val cards = cardsFrom(get("$mainUrl/${request.data}"))
         val items = cards.map { c ->
             val isMovie = isMovieUrl(c.url)
             newTvSeriesSearchResponse(
