@@ -103,7 +103,7 @@ class ArabSeedProvider : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         val q = query.trim()
         if (q.isBlank()) return emptyList()
-        val homeHtml = get(mainUrl) ?: return emptyList()
+        val homeHtml = get("$mainUrl/main/") ?: return emptyList()
         val csrf = csrfOf(homeHtml) ?: return emptyList()
         val res = try {
             app.post(
