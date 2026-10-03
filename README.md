@@ -11,9 +11,7 @@
 <p align="left">
 https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/repo.json
 </p>
-<p align="left">
-https://t.ly/UHH7S
-</p>
+
 
 <p>إذا لم يفتح الرابط، غيّر الـ DNS من إعدادات كلاود ستريم ⚙️</p>
 
