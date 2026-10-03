@@ -9,7 +9,7 @@
 <h2>⬇️ انسخ الرابط والصقه في التطبيق لتحميل الإضافات</h2>
 
 <p align="left">
-https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/repo.json
+https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
 </p>
 
 <p>إذا لم يفتح الرابط، غيّر الـ DNS من إعدادات كلاود ستريم ⚙️</p>
