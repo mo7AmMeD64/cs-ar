@@ -9,7 +9,7 @@ import json
 import os
 import shutil
 
-REPO = "mo7AmMeD64/cs-cinemana"
+REPO = "mo7AmMeD64/cs-ar"
 BRANCH = "main"
 RAW = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/repo"
 
