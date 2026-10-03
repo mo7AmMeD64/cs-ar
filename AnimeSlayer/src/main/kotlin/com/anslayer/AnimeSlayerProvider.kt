@@ -208,7 +208,7 @@ class AnimeSlayerProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
         if (data.contains("anslayer://f2/")) {
-            val f2Url = data.substringAfter("anslayer://f2/").trim().replace("\\", "")
+            val f2Url = data.substringAfter("anslayer://f2/").trim()
             val j = try {
                 json.parseToJsonElement(app.get(f2Url, headers = mapOf("User-Agent" to UA)).text).jsonArray
             } catch (_: Exception) {
