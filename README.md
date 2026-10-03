@@ -1,21 +1,82 @@
-# CloudStream Extensions (Arabic) - mo7AmMeD64
+<h1 align="center">📺 إضافات أسطورية عربية لتطبيق كلاود ستريم</h1>
 
-Repo URL:
-`https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/repo.json`
-انسخ الرابط وضعه في اضافات كلاود ستريم
+<h3 align="center">
+إضافات عربية لمواقع وتطبيقات بسيرفرات مستقرة ومحتوى واسع
+<br>
+🎌 أنمي • 📺 مسلسلات • 🎬 أفلام
+</h3>
 
-#رابط اقصر
-`https://t.ly/UHH7S`
+<h2>⬇️ انسخ الرابط والصقه في التطبيق لتحميل الإضافات</h2>
 
-## الاضافات
-| الاضافة | المصدر |
-|---|---|
-| Shabakaty Cinemana | cinemana.shabakaty.cc |
-| Cinema Box | cinema.albox.co (API v4) |
-| Cima Cloud | cima-cloud.com (API 1654865.xyz — تطبيق CimaCloud 1.3) |
-| MovieBox | movie-box.co (تطبيق MovieBox — ملف .cs3 جاهز، بدون مصدر) |
+<p align="left">
+https://raw.githubusercontent.com/mo7AmMeD64/cs-cinemana/main/repo/repo.json
+</p>
+<p align="left">
+https://t.ly/UHH7S
+</p>
 
-## اضافة اضافة جديدة
-1. انشئ مجلدا بجانب `CinemaBox/` (فيه `build.gradle.kts` و `src/main/...`).
-2. اضف سطرا له في `PLUGINS` داخل `.github/scripts/make_repo.py`.
-3. ارفع التغييرات، الـ GitHub Action يبني ملفات `.cs3` ويحدّث `repo/`.
+<p>إذا لم يفتح الرابط، غيّر الـ DNS من إعدادات كلاود ستريم ⚙️</p>
+
+<h2>🧩 الإضافات المتوفرة</h2>
+<ul>
+<li>ShabakatyCinemana (داخل العراق فقط)</li>
+<li>Stardima</li>
+<li>Anim3rb</li>
+<li>AnimeSlayer</li>
+<li>CartoonDub</li>
+<li>CimaCloud</li>
+<li>CinemaBox (داخل العراق فقط)</li>
+<li>CinemaPlus</li>
+<li>Egydead</li>
+<li>Krmzy</li>
+<li>MeowTv</li>
+<li>MovieBox</li>
+<li>Topcinema</li>
+<li>Yacintv</li>
+<li>Anime-Phoenix</li>
+<li>Animewitcher</li>
+</ul>
+
+<h2>🌟 الهدف</h2>
+<ul>
+<li>📌 توفير محتوى عربي مناسب وسهل الوصول.</li>
+<li>🚀 تحسين تجربة المشاهدة على تطبيق Cloudstream.</li>
+<li>🤝 مشاركة المجتمع العربي بملحقات مفتوحة قابلة للتطوير.</li>
+</ul>
+
+<h2>🛠️ المشاركة</h2>
+<ul>
+<li>إذا أعجبتك هذه الإضافات يمكنك:</li>
+<ul>
+<li>✅ استخدامها مباشرة.</li>
+<li>✏️ تعديلها بما يناسبك.</li>
+<li>💡 المساهمة باقتراحات أو تحسينات.</li>
+</ul>
+</ul>
+
+<h2>⚖️ الحقوق</h2>
+<p>📝 حقوق التعديل والاستخدام مفتوحة لجميع المستخدمين.</p>
+
+<h2>💝 ادعمني</h2>
+<p>دعمك يجعلني أستمر في تقديم إضافات أكثر وأكثر 🙏</p>
+<p>
+<a href="https://creators.sa/x3onq">https://creators.sa/x3onq</a>
+</p>
+
+<h2>⚖️ DMCA Disclaimer</h2>
+<p>
+We hereby issue this notice to clarify that these extensions function similarly to a standard web browser by fetching video files from the internet.
+</p>
+
+<ul>
+<li>❌ No content is hosted by this repository or the Cloudstream 3 application.</li>
+<li>🌐 Any content accessed is hosted by third-party websites.</li>
+<li>👤 Users are solely responsible for their usage and must comply with their local laws.</li>
+<li>📩 If you believe content is violating copyright laws, please contact the actual file hosts, not the developers of this repository or the Cloudstream 3 app.</li>
+</ul>
+
+<hr>
+
+<p align="center">
+💖 <b>استمتع بالمشاهدة ولا تنس مشاركة الإضافات مع الأصدقاء!</b>
+</p>
