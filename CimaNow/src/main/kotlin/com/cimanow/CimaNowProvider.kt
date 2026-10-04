@@ -350,12 +350,15 @@ internal fun showCookieDialog(context: Context, prefs: SharedPreferences) {
     btnRow.addView(
         roundBtn("حفظ", "#c80101") {
             val v = input.text.toString().trim()
-            if (v.length < 20 || !v.contains("=")) {
-                Toast.makeText(context, "الصق كوكيز صحيحة", Toast.LENGTH_SHORT).show()
+            val isJson = v.startsWith("[") || v.startsWith("{")
+            val isRaw = v.contains("=") && (v.contains("token") || v.contains("guid"))
+            if (v.length < 20 || (!isJson && !isRaw)) {
+                Toast.makeText(context, "الصق الكوكيز كاملة (بدون ...) بصيغة access-token=...; profile-guid=...", Toast.LENGTH_LONG).show()
                 return@roundBtn
             }
             prefs.edit().putString(PREF_COOKIES, v).apply()
-            Toast.makeText(context, "تم الحفظ ✓ حدّث الصفحة", Toast.LENGTH_LONG).show()
+            val fmt = if (isJson) "JSON" else "raw"
+            Toast.makeText(context, "تم الحفظ ($fmt) ✓ حدّث الصفحة", Toast.LENGTH_LONG).show()
             dialog.dismiss()
         },
         LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
