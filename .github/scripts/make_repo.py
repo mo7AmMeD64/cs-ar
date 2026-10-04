@@ -151,14 +151,6 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Anime", "AsianDrama"],
         "language": "ar",
     },
-    {
-        "internalName": "CimaNow",
-        "name": "CimaNow",
-        "iconUrl": "https://cimanow.cc/wp-content/uploads/2017/05/Favicon.gif",
-        "version": 5,
-        "tvTypes": ["Movie", "TvSeries", "AsianDrama"],
-        "language": "ar",
-    },
 ]
 
 os.makedirs("repo", exist_ok=True)
