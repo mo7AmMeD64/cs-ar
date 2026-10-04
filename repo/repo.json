@@ -1,7 +1,7 @@
 {
   "name": "CS-AR",
   "description": "اضافات عربية لكلاود ستريم",
-  "icon": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icon.png",
+  "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icon.png",
   "manifestVersion": 1,
   "pluginLists": [
     "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/plugins.json"
