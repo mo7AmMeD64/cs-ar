@@ -23,6 +23,10 @@ import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.Jsoup
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * Cima Now (\u0633\u064a\u0645\u0627 \u0646\u0627\u0648, vip.cimanowinc.com) — CloudStream provider.
@@ -61,7 +65,28 @@ class CimaNowProvider(private val prefs: SharedPreferences) : MainAPI() {
         val PLAIN_PREFIX = "<!DOCTYPE html>"
     }
 
-    private fun cookieHeader(): String = prefs.getString(PREF_COOKIES, "")?.trim() ?: ""
+    /**
+     * The cookie header: accepts BOTH formats:
+     *   1. the raw Cookie format:  access-token=...; profile-guid=...
+     *   2. the browser JSON export: [{"name":"access-token","value":"..."},...]
+     */
+    private fun cookieHeader(): String {
+        val raw = prefs.getString(PREF_COOKIES, "")?.trim() ?: ""
+        if (raw.startsWith("[")) {
+            return try {
+                val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                arr.mapNotNull { el ->
+                    val o = el.jsonObject
+                    val n = o["name"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                    val v = o["value"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                    "$n=$v"
+                }.joinToString("; ")
+            } catch (_: Exception) {
+                ""
+            }
+        }
+        return raw
+    }
 
     private suspend fun get(url: String): String? = try {
         val res = app.get(

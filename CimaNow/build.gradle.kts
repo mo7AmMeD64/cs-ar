@@ -1,4 +1,4 @@
-version = 1
+version = 2
 
 cloudstream {
     description = "يتطلب تسجيل الدخول: الصق الكوكيز من إعدادات الإضافة"
