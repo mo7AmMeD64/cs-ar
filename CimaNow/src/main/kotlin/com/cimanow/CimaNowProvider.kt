@@ -129,17 +129,34 @@ class CimaNowProvider(private val prefs: SharedPreferences) : MainAPI() {
 
     private fun cardsFrom(html: String): List<Card> {
         val doc = Jsoup.parse(html)
-        return doc.select("a[title]").mapNotNull { a ->
-            val href = a.absUrl("href").ifBlank { a.attr("href") }
+        val out = mutableListOf<Card>()
+        val seen = mutableSetOf<String>()
+        // 1. the a[title] cards (the search page: <a href title class="movie__block">)
+        doc.select("a[title]").forEach { a ->
+            val href = (a.absUrl("href").ifBlank { a.attr("href") }).trim()
             val title = a.attr("title").trim()
-            if (href.isBlank() || title.isBlank()) return@mapNotNull null
-            if (!href.contains("vip.cimanowinc.com")) return@mapNotNull null
-            // only the content posts, not the nav/category pages
-            if (Regex("(category|tag|actor|year|signin|plans|dmca|privacy|about)").containsMatchIn(href)) return@mapNotNull null
+            if (href.isBlank() || title.isBlank()) return@forEach
+            if (!seen.add(href)) return@forEach
             val img = a.selectFirst("img")?.let { im ->
                 im.attr("data-src").ifBlank { im.attr("src") }.takeIf { it.contains("media") || it.contains("upload") }
             }
-            Card(href, title, img)
+            out.add(Card(href, title, img))
+        }
+        // 2. the picture>a cards (the category/home pages: <picture><a href><img alt></a></picture>)
+        doc.select("picture > a[href], picture a[href]").forEach { a ->
+            val href = (a.absUrl("href").ifBlank { a.attr("href") }).trim()
+            if (href.isBlank()) return@forEach
+            if (!seen.add(href)) return@forEach
+            val img = a.selectFirst("img") ?: return@forEach
+            val title = img.attr("alt").trim()
+            if (title.isBlank()) return@forEach
+            val src = img.attr("src").takeIf { it.contains("media") || it.contains("upload") }
+            out.add(Card(href, title, src))
+        }
+        // keep only the content posts on the site's domain
+        return out.filter { c ->
+            c.url.contains("vip.cimanowinc.com") &&
+                !Regex("(category|tag|actor|year|signin|plans|dmca|privacy|about)").containsMatchIn(c.url)
         }
     }
 
@@ -157,8 +174,9 @@ class CimaNowProvider(private val prefs: SharedPreferences) : MainAPI() {
     // ---------- main page ----------
 
     override val mainPage = mainPageOf(
-        "?s=" to "الأحدث",
-        "?s=&type=movie" to "أفلام",
+        "category/المسلسلات/" to "مسلسلات",
+        "category/الافلام/" to "أفلام",
+        "category/برامج-تلفزيونية/" to "برامج",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {

@@ -155,7 +155,7 @@ PLUGINS = [
         "internalName": "CimaNow",
         "name": "CimaNow",
         "iconUrl": "https://cimanow.cc/wp-content/uploads/2017/05/Favicon.gif",
-        "version": 3,
+        "version": 4,
         "tvTypes": ["Movie", "TvSeries", "AsianDrama"],
         "language": "ar",
     },
