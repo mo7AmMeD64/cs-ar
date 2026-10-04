@@ -345,7 +345,7 @@
     "iconUrl": "https://cimanow.cc/wp-content/uploads/2017/05/Favicon.gif",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 22547,
+    "fileSize": 23253,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -356,7 +356,7 @@
       "TvSeries",
       "AsianDrama"
     ],
-    "version": 1,
+    "version": 2,
     "internalName": "CimaNow",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/CimaNow.cs3",
     "name": "CimaNow"
