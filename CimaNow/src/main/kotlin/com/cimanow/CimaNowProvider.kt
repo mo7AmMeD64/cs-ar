@@ -23,6 +23,7 @@ import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.Jsoup
+import com.lagradost.cloudstream3.network.WebViewResolver
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -243,6 +244,21 @@ class CimaNowProvider(private val prefs: SharedPreferences) : MainAPI() {
         }
     }
 
+    /** the cookies into the WebView's CookieManager (the resolver's real browser needs them) */
+    private fun injectCookiesToWebView() {
+        val header = cookieHeader()
+        if (header.isBlank()) return
+        val cm = android.webkit.CookieManager.getInstance()
+        cm.setAcceptCookie(true)
+        for (pair in header.split(";")) {
+            val p = pair.trim()
+            if (p.contains("=")) {
+                try { cm.setCookie("$mainUrl/", p) } catch (_: Exception) {}
+            }
+        }
+        cm.flush()
+    }
+
     // ---------- links ----------
 
     override suspend fun loadLinks(
@@ -256,28 +272,56 @@ class CimaNowProvider(private val prefs: SharedPreferences) : MainAPI() {
             if (!postUrl.startsWith("http")) return false
             // the watching page has the player
             val watchUrl = postUrl.trimEnd('/').removeSuffix("/watching") + "/watching/"
-            val html = get(watchUrl) ?: get(postUrl) ?: return false
-            val real = deobfuscate(html) ?: html
-            val links = Jsoup.parse(real).select("iframe[src], [data-link], a[href]").mapNotNull { el ->
-                val u = el.attr("data-link").ifBlank {
-                    el.attr("src").ifBlank { el.attr("href") }
-                }.trim()
-                u.takeIf {
-                    it.startsWith("http") && !it.contains("googleads") && !it.contains("doubleclick") &&
-                        !it.contains("freex2line") && !it.contains("youtube")
-                }
-            }.distinct()
-            if (links.isEmpty()) return false
-            var got = false
-            for (l in links) {
-                got = resolveLink(l, subtitleCallback, callback) || got
+
+            // 1. the plain fetch + the deobfuscation
+            val html = get(watchUrl) ?: get(postUrl)
+            if (html != null) {
+                val real = deobfuscate(html) ?: html
+                if (gotLinks(real, subtitleCallback, callback)) return true
             }
-            return got
+
+            // 2. the watching page is behind a real-browser login check (302 -> signin)
+            //    -> load it in a REAL WebView with the cookies injected, intercept the
+            //       player AJAX (core.php) and the video urls
+            return try {
+                injectCookiesToWebView()
+                val resolver = WebViewResolver(
+                    Regex("core\\.php|\\.m3u8|\\.mp4|video_ext"),
+                )
+                val res = app.get(watchUrl, interceptor = resolver, headers = mapOf("User-Agent" to UA))
+                val real2 = deobfuscate(res.text) ?: res.text
+                gotLinks(real2, subtitleCallback, callback)
+            } catch (_: Exception) {
+                false
+            }
         }
         if (data.startsWith("http")) {
             return resolveLink(data, subtitleCallback, callback)
         }
         return false
+    }
+
+    /** parse the page for the player links and emit them; true if any */
+    private suspend fun gotLinks(
+        html: String,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit,
+    ): Boolean {
+        val links = Jsoup.parse(html).select("iframe[src], [data-link], a[href]").mapNotNull { el ->
+            val u = el.attr("data-link").ifBlank {
+                el.attr("src").ifBlank { el.attr("href") }
+            }.trim()
+            u.takeIf {
+                it.startsWith("http") && !it.contains("googleads") && !it.contains("doubleclick") &&
+                    !it.contains("freex2line") && !it.contains("youtube") && !it.contains("signin")
+            }
+        }.distinct()
+        if (links.isEmpty()) return false
+        var got = false
+        for (l in links) {
+            got = resolveLink(l, subtitleCallback, callback) || got
+        }
+        return got
     }
 
     private suspend fun resolveLink(
