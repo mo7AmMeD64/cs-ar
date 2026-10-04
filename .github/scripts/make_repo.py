@@ -190,7 +190,7 @@ with open("repo/repo.json", "w", encoding="utf-8") as f:
     json.dump({
         "name": "CS-AR",
         "description": "اضافات عربية لكلاود ستريم",
-        "icon": f"{RAW}/icon.png",
+        "iconUrl": f"{RAW}/icon.png",
         "manifestVersion": 1,
         "pluginLists": [f"{RAW}/plugins.json"],
     }, f, indent=2, ensure_ascii=False)
