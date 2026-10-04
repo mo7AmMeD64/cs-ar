@@ -340,5 +340,25 @@
     "internalName": "ArabSeed",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/ArabSeed.cs3",
     "name": "عرب سيد"
+  },
+  {
+    "iconUrl": "https://cimanow.cc/wp-content/uploads/2017/05/Favicon.gif",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 22547,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "AsianDrama"
+    ],
+    "version": 1,
+    "internalName": "CimaNow",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/CimaNow.cs3",
+    "name": "CimaNow"
   }
 ]
