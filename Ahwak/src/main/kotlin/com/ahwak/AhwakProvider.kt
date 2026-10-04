@@ -94,7 +94,7 @@ class AhwakProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val html = get(mainUrl + request.data) ?: return newHomePageResponse(request.name, emptyList())
+        val html = get(mainUrl.trimEnd('/') + "/" + request.data.trimStart('/')) ?: return newHomePageResponse(request.name, emptyList())
         val items = if (request.data.contains("moslslat")) {
             seriesFrom(html)
         } else {
@@ -119,7 +119,11 @@ class AhwakProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         // NOTE: the url may be mangled by CloudStream's fixUrl; check "ahwak://" first
         if (!url.contains("ahwak://")) return null
-        val postUrl = url.substringAfter("ahwak://", "").trim()
+        // the mangled form keeps the payload prefix: ahwak://watch/https://... -> "watch/https://..."
+        val raw = url.substringAfter("ahwak://", "").trim()
+        val postUrl = if (raw.startsWith("http")) raw else {
+            raw.substringAfter("watch/", "").ifBlank { raw.substringAfter("serie/", "") }.trim()
+        }
         if (!postUrl.startsWith("http")) return null
 
         return when {
