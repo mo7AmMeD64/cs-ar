@@ -32,6 +32,8 @@ https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
 <li>Yacintv</li>
 <li>Anime-Phoenix</li>
 <li>Animewitcher</li>
+<li>YACINE TV</li>
+<li>AHWAK TV</li>
 </ul>
 
 <h2>🌟 الهدف</h2>
