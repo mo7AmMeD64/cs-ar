@@ -151,6 +151,15 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Anime", "AsianDrama"],
         "language": "ar",
     },
+    {
+        "internalName": "StreamPlay",
+        "name": "StreamPlay",
+        "iconUrl": None,
+        "version": 687,
+        "tvTypes": ["Movie", "TvSeries"],
+        "language": "en",
+        "file": "StreamPlay/StreamPlay.cs3",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
