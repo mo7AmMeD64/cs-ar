@@ -1,4 +1,4 @@
-<h1 align="center">📺 إضافات أسطورية عربية لتطبيق كلاود ستريم</h1>
+<h1 align="center">📺 إضافات عربية لتطبيق كلاود ستريم</h1>
 
 <h3 align="center">
 إضافات عربية لمواقع وتطبيقات بسيرفرات مستقرة ومحتوى واسع
@@ -33,7 +33,7 @@ https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
 <li>Anime-Phoenix</li>
 <li>Animewitcher</li>
 <li>YACINE TV</li>
-<li>AHWAK TV</li>
+<li>Stream play</li>
 </ul>
 
 <h2>🌟 الهدف</h2>
