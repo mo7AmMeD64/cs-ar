@@ -340,5 +340,24 @@
     "internalName": "ArabSeed",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/ArabSeed.cs3",
     "name": "عرب سيد"
+  },
+  {
+    "iconUrl": null,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 1934385,
+    "status": 1,
+    "language": "en",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 687,
+    "internalName": "StreamPlay",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/StreamPlay.cs3",
+    "name": "StreamPlay"
   }
 ]
