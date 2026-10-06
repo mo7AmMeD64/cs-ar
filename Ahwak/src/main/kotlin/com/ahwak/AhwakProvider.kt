@@ -216,12 +216,7 @@ class AhwakProvider : MainAPI() {
         // NOTE: the data may be the mangled load url; check "ahwak://" FIRST
         if (data.contains("ahwak://see/") || data.contains("ahwak://watch/")) {
             val postUrl = data.substringAfter("ahwak://", "").trim()
-            var vid = vidOf(postUrl)
-            if (vid == null && postUrl.startsWith("http")) {
-                // the watch url -> the see.php has the same vid
-                vid = vidOf(postUrl)
-            }
-            if (vid == null) return false
+            val vid = vidOf(postUrl) ?: return false
             val seeUrl = "$mainUrl/see.php?vid=$vid"
             val html = get(seeUrl) ?: return false
             val doc = Jsoup.parse(html)
@@ -233,6 +228,21 @@ class AhwakProvider : MainAPI() {
             var got = false
             for (l in links.distinct()) {
                 if (l.isBlank() || !l.startsWith("http")) continue
+                // 1. the packed-eval hosters (the vidhide family: 1vid/vidspeed/uqload/vidhideplus):
+                //    fetch the embed page, unpack the packed eval, take the m3u8 directly
+                val packed = get(l) ?: ""
+                val direct = extractPackedM3u8(packed)
+                if (direct != null) {
+                    callback(
+                        newExtractorLink(name, "اهواك تي في", direct, ExtractorLinkType.M3U8) {
+                            this.referer = l.substringBeforeLast("/")
+                            this.quality = Qualities.Unknown.value
+                        }
+                    )
+                    got = true
+                    continue
+                }
+                // 2. the VK embeds + anything else -> the universal extractor
                 got = try {
                     loadExtractor(l, referer = mainUrl, subtitleCallback = subtitleCallback, callback = callback)
                 } catch (_: Exception) {
@@ -249,5 +259,43 @@ class AhwakProvider : MainAPI() {
             }
         }
         return false
+    }
+
+    /**
+     * The vidhide-family embeds pack the player js in an eval(p,a,c,k,e,d):
+     * the m3u8 url (the 'file'/'sources' key) is inside. Unpack it and
+     * return the first m3u8/mp4 found (from Krmzy's deobfuscation).
+     */
+    private fun extractPackedM3u8(pageText: String): String? {
+        val evalRegex = Regex("""eval\s*\(\s*function\s*\(.*?\)\s*\{.*?\}\s*\((.*)\)\s*\)""")
+        val paramsString = evalRegex.find(pageText)?.groupValues?.getOrNull(1) ?: return null
+        val paramsRegex = Regex("""['"](.*?)['"]\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*['"](.*?)['"]\.split\s*\(['"]\|['"]\)""")
+        val pm = paramsRegex.find(paramsString) ?: return null
+        val (packedCode, baseStr, countStr, dictStr) = pm.destructured
+        val base = baseStr.toIntOrNull() ?: return null
+        val count = countStr.toIntOrNull() ?: return null
+        val keywords = dictStr.split('|')
+
+        fun toBase(num: Int, radix: Int): String {
+            val chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            if (num == 0) return "0"
+            var n = num
+            val sb = StringBuilder()
+            while (n > 0) {
+                sb.append(chars[n % radix])
+                n /= radix
+            }
+            return sb.reverse().toString()
+        }
+        val replaceMap = mutableMapOf<String, String>()
+        for (i in 0 until count) {
+            val keyword = keywords.getOrNull(i)
+            if (!keyword.isNullOrEmpty()) replaceMap[toBase(i, base)] = keyword
+        }
+        val unpacked = Regex("""\b\w+\b""").replace(packedCode) { mr ->
+            replaceMap[mr.value] ?: mr.value
+        }
+        // the m3u8/mp4 urls (with the query tokens)
+        return Regex("""(https?://[^"'\s]*\.(?:m3u8|mp4)[^"'\s]*)""").find(unpacked)?.groupValues?.get(1)
     }
 }
