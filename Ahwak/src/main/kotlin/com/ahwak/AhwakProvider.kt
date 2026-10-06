@@ -233,14 +233,21 @@ class AhwakProvider : MainAPI() {
                 val packed = get(l) ?: ""
                 val direct = extractPackedM3u8(packed)
                 if (direct != null) {
-                    callback(
-                        newExtractorLink(name, "اهواك تي في", direct, ExtractorLinkType.M3U8) {
-                            this.referer = l.substringBeforeLast("/")
-                            this.quality = Qualities.Unknown.value
+                    // verify first: the 1vid embeds are often dead CDN-side (404
+                    // even in the original app) — don't emit dead links
+                    try {
+                        val vr = app.head(direct, headers = mapOf("User-Agent" to UA, "Referer" to "$l/"))
+                        if (vr.code in 200..299) {
+                            callback(
+                                newExtractorLink(name, "اهواك تي في", direct, ExtractorLinkType.M3U8) {
+                                    this.referer = l.substringBeforeLast("/")
+                                    this.quality = Qualities.Unknown.value
+                                }
+                            )
+                            got = true
+                            continue
                         }
-                    )
-                    got = true
-                    continue
+                    } catch (_: Exception) {}
                 }
                 // 2. the VK embeds + anything else -> the universal extractor
                 got = try {
