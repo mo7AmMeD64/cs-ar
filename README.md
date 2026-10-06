@@ -6,10 +6,16 @@
 🎌 أنمي • 📺 مسلسلات • 🎬 أفلام
 </h3>
 
-<h2>⬇️ انسخ الرابط والصقه في التطبيق لتحميل الإضافات</h2>
+<h2>⬇️ انسخ الرابط واللصقه في التطبيق او اضغط على الصوره لتحميل الإضافات</h2>
 
 <p align="left">
 https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
+</p>
+
+<p align="left">
+<a href="https://mo7ammed64.github.io/click_image/">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbrCPMjoDiORDnpcSxcPa6g-7bWW31r6-BLQ&s" />
+</a>
 </p>
 
 <p>إذا لم يفتح الرابط، غيّر الـ DNS من إعدادات كلاود ستريم ⚙️</p>
