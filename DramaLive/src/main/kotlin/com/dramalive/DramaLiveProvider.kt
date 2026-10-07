@@ -240,9 +240,11 @@ class DramaLiveProvider : MainAPI() {
 
     // ---------- json helpers ----------
 
-    private fun JsonObject.arr(key: String) = this[key]?.jsonArray
+    // NOTE: null-valued keys ("live":null) — the throwing .jsonArray crashes on JsonNull
+    private fun JsonObject.arr(key: String): kotlinx.serialization.json.JsonArray? =
+        this[key] as? kotlinx.serialization.json.JsonArray
 
-    private fun JsonObject.obj(key: String) = this[key]?.jsonObject
+    private fun JsonObject.obj(key: String): JsonObject? = this[key] as? JsonObject
 
     private fun JsonObject.str(vararg keys: String): String? {
         for (k in keys) {
