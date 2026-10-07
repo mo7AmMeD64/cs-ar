@@ -12,6 +12,8 @@ import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -72,27 +74,29 @@ class DramaLiveProvider : MainAPI() {
 
     private val client = okhttp3.OkHttpClient()
 
-    /** the API call: device payload + query -> POST the raw encrypted body (NO form key!) */
+    /** the API call: device payload + query -> POST the raw encrypted body (NO form key!)
+     *  NOTE: the payload must be serialized with kotlinx (org.json.JSONObject drops
+     *  kotlinx JsonElement values -> the query fields vanish -> no channels!) */
     private fun api(endpoint: String, query: JsonObject): JsonObject? {
-        val dev = linkedMapOf<String, Any>(
-            "user_id" to "_12345_${System.currentTimeMillis()}_notloggedin.com_dramalive3",
-            "device_id" to "a1b2c3d4-e5f6-7890-abcd-ef0123456789",
-            "device_api" to "34",
-            "version_name" to "185",
-            "language" to "en",
-            "timezone" to "Asia/Baghdad",
-            "device_type" to "phone",
-            "KEY_ACTIVATED_TYPE" to "202122",
-            "store" to "playStore",
-            "isStoreVersion" to false,
-            "isPremium" to false,
-            "isCoupon_active" to false,
-            "hideAds" to false,
-            "appCount" to "{}",
-            "mainServer" to mainUrl,
-        )
-        dev.putAll(query)
-        val payload = encrypt(org.json.JSONObject(dev).toString()) ?: return null
+        val dev = kotlinx.serialization.json.buildJsonObject {
+            put("user_id", "_12345_${System.currentTimeMillis()}_notloggedin.com_dramalive3")
+            put("device_id", "a1b2c3d4-e5f6-7890-abcd-ef0123456789")
+            put("device_api", "34")
+            put("version_name", "185")
+            put("language", "en")
+            put("timezone", "Asia/Baghdad")
+            put("device_type", "phone")
+            put("KEY_ACTIVATED_TYPE", "202122")
+            put("store", "playStore")
+            put("isStoreVersion", false)
+            put("isPremium", false)
+            put("isCoupon_active", false)
+            put("hideAds", false)
+            put("appCount", "{}")
+            put("mainServer", mainUrl)
+            query.forEach { (k, v) -> put(k, v) }
+        }
+        val payload = encrypt(dev.toString()) ?: return null
         val host = if (endpoint.startsWith("getLiveByRedirect")) REDIRECT_HOST else mainUrl
         return try {
             val body = payload.toRequestBody("application/x-www-form-urlencoded".toMediaType())
