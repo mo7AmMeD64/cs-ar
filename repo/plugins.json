@@ -364,7 +364,7 @@
     "iconUrl": "https://imgs.search.brave.com/zVNSn75SIpZAWro4RZidXuRAIrkGnEOcdrt2-J35A4g/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvNTJjMjM2ZjZh/ZWM0YWZjNmJiMzgy/MmM3M2MxMWI4YTcx/NTM1YTU0YTk2ZTAz/NTM0MTM2MGFjZTNi/ZTFlNWUxOC9kcmFt/YWxpdmVkbC5jb20v",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 18144,
+    "fileSize": 18334,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -373,7 +373,7 @@
     "tvTypes": [
       "Live"
     ],
-    "version": 2,
+    "version": 3,
     "internalName": "DramaLive",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/DramaLive.cs3",
     "name": "DramaLive"
