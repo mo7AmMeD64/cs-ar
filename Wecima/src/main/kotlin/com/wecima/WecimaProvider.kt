@@ -60,7 +60,22 @@ class WecimaProvider : MainAPI() {
             "updown" to "https://mawdhou3.com/scrapefinal/updown.php?api=",
             "uqload" to "https://mawdhou3.com/scrapefinal/uqload.php?api=",
             "ukrcdn" to "https://mawdhou3.com/scrapefinal/ukrcdn.php?api=",
+            "test-stream" to "https://mawdhou3.com/scrapefinal/stream.developer.php?api=",
+            "vidoba" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
+            "vidroba" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
+            "mwdy" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
+            "miravd" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
+            "film77" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
+            "okhd" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
+            "hdup20" to "https://mawdhou3.com/scrapefinal/hdup20.php?api=",
+            "anafast" to "https://mawdhou3.com/test.php?api=",
+            "mp4plus" to "https://mawdhou3.com/test.php?api=",
+            "pluss24" to "https://mawdhou3.com/scrapefinal/vidsp/post.php?api=",
+            "googlefas" to "https://mawdhou3.com/aminegoogle/extract_qualite.php?url=",
         )
+        // two-step recipes (from the app hosts/config urlsite "steps")
+        private const val STEP1_MZFI = "https://flech.tn/amine/movibox/step1_prepare_movibox.php"
+        private const val STEP1_OSTV = "https://flech.tn/scrapefinal/dramabox/step1_prepare_oscar.php"
 
         private val json = Json { ignoreUnknownKeys = true }
     }
@@ -298,7 +313,7 @@ class WecimaProvider : MainAPI() {
         )
     }
 
-    /** egybestvid + seriesmp4 resolve locally; the rest via mawdhou3 GET scrapers */
+    /** all the custom resolvers (from the app hosts/config recipes + live-verified) */
     private suspend fun resolveEmbed(link: String): List<Pair<String, String>>? = try {
         when {
             link.contains("egybestvid") -> {
@@ -315,8 +330,54 @@ class WecimaProvider : MainAPI() {
                 else {
                     val t = app.get(link, headers = mapOf("User-Agent" to CHROME_UA)).text
                     Regex("iframe[^>]+src=\"([^\"]+)\"").find(t)?.groupValues?.get(1)
-                        ?.replace("&amp;", "&")?.takeIf { it.startsWith("http") }?.let { listOf(it to "") }
+                        ?.replace("&" + "amp;", "&")?.takeIf { it.startsWith("http") }?.let { listOf(it to "") }
                 }
+            }
+            link.contains("developer-pro.workers.dev") -> {
+                // get-links 302s straight to the OK.ru CDN file -> direct
+                listOf(link to "")
+            }
+            link.contains("vidaraa.") -> {
+                // POST /api/stream {filecode, device} -> streaming_url
+                val code = link.trimEnd('/').substringAfterLast('/')
+                val host = Uri.parse(link).host ?: return null
+                val r = app.post(
+                    "https://$host/api/stream",
+                    headers = mapOf("User-Agent" to CHROME_UA, "Content-Type" to "application/json"),
+                    json = org.json.JSONObject(mapOf("filecode" to code, "device" to "android")),
+                ).text
+                json.parseToJsonElement(r).jsonObject.str("streaming_url")?.let { listOf(it to "") }
+            }
+            link.contains("mzfi.me") || link.contains("ostvapp") -> {
+                // two-step: step1 returns the fetch headers, step2 returns the streams JSON
+                val step1 = if (link.contains("mzfi")) STEP1_MZFI else STEP1_OSTV
+                val j = json.parseToJsonElement(
+                    app.post(step1, headers = mapOf("User-Agent" to CHROME_UA), data = mapOf("url" to link)).text
+                ).jsonObject
+                val hdrs = (j["headers"] as? JsonObject)?.mapNotNull { (k, v) ->
+                    (v.jsonPrimitive.contentOrNull)?.let { k to it }
+                }?.toMap() ?: emptyMap()
+                val t = app.get(j.str("url") ?: link, headers = hdrs).text
+                val streams = runCatching {
+                    ((json.parseToJsonElement(t).jsonObject["data"] as? JsonObject)?.get("streams") as? JsonArray)
+                }.getOrNull()
+                val out = streams?.mapNotNull s@{ s ->
+                    val o = s as? JsonObject ?: return@s null
+                    o.str("url")?.let { it to (o.str("resolutions") ?: "") }
+                } ?: Regex("https?://[^\"\\s]+?(?:\\.m3u8|\\.mp4)[^\"\\s]*")
+                    .findAll(t.replace("\\/", "/"))
+                    .map { m -> m.value to (Regex("quality=(\\w+)").find(m.value)?.groupValues?.getOrNull(1) ?: "") }
+                    .distinctBy { it.first }.toList()
+                out.ifEmpty { null }
+            }
+            link.contains("hanerix") || link.contains("vidspeed") || link.contains("arabveturk") -> {
+                // packed-eval pages -> unpack (Krmzy deobfuscator) -> master.txt/m3u8
+                val deob = krmzyUnpack(app.get(link, headers = mapOf("User-Agent" to CHROME_UA)).text) ?: return null
+                Regex("[\"'](https?://[^\"']+)[\"']").findAll(deob).map { it.groupValues[1] }
+                    .firstOrNull { it.contains("master.txt") || it.contains(".m3u8") }?.let { listOf(it to "") }
+                        ?: Regex("file:\\s*[\"'](https[^\"']+)[\"']").findAll(deob).mapNotNull { m ->
+                        m.groupValues.getOrNull(1)?.takeIf { it.contains(".m3u8") }?.let { it to "" }
+                    }.toList().ifEmpty { null }
             }
             else -> {
                 val scraper = SCRAPERS.firstOrNull { (h, _) -> link.contains(h, true) }?.second
@@ -328,7 +389,34 @@ class WecimaProvider : MainAPI() {
         null
     }
 
-    /** mawdhou3 responses: JSON {filtered_content[], Quality[]} or raw file:"https://..." */
+    /** dean.edwards packed-eval unpacker (proven in the Krmzy provider) */
+    private fun krmzyUnpack(pageText: String): String? {
+        val evalMatch = Regex("eval\\s*\\(\\s*function\\s*\\(.*?\\)\\s*\\{.*?\\}\\s*\\((.*)\\)\\s*\\)", setOf(RegexOption.DOT_MATCHES_ALL)).find(pageText) ?: return null
+        val pm = Regex("['\"](.*?)['\"]\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*['\"](.*?)['\"]\\.split\\s*\\(['\"]\\|['\"]\\)", setOf(RegexOption.DOT_MATCHES_ALL)).find(evalMatch.groupValues[1]) ?: return null
+        val p = pm.groupValues[1]
+        val a = pm.groupValues[2].toIntOrNull() ?: return null
+        val c = pm.groupValues[3].toIntOrNull() ?: return null
+        val k = pm.groupValues[4].split('|')
+        val chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        fun toBase(num: Int, radix: Int): String {
+            if (num == 0) return "0"
+            var n = num
+            val sb = StringBuilder()
+            while (n > 0) {
+                sb.insert(0, chars[n % radix])
+                n /= radix
+            }
+            return sb.toString()
+        }
+        val map = HashMap<String, String>()
+        for (i in 0 until c) {
+            val kw = k.getOrNull(i)
+            if (!kw.isNullOrEmpty()) map[toBase(i, a)] = kw
+        }
+        return Regex("\\b\\w+\\b").replace(p) { m -> map[m.value] ?: m.value }
+    }
+
+    /** mawdhou3 responses: JSON {filtered_content[], Quality[]} or raw file:"url",label:"quality" */
     private fun parseScrape(raw: String?): List<Pair<String, String>>? {
         if (raw.isNullOrBlank()) return null
         val parsed = try { json.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
@@ -342,8 +430,9 @@ class WecimaProvider : MainAPI() {
                 }
             }.ifEmpty { null }
         }
-        return Regex("file:\"(https[^\"]+)\"").findAll(raw).mapNotNull { m ->
-            m.groupValues.getOrNull(1)?.let { it to "" }
-        }.toList().ifEmpty { null }
+        val out = Regex("file:\"(https[^\"]+)\"(?:\\s*,\\s*label:\"([^\"]*)\")?").findAll(raw).mapNotNull { m ->
+            m.groupValues.getOrNull(1)?.takeIf { it.startsWith("http") }?.let { it to (m.groupValues.getOrNull(2) ?: "") }
+        }.toList()
+        return out.ifEmpty { null }
     }
 }
