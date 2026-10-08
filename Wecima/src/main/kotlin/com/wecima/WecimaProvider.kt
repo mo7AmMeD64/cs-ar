@@ -60,7 +60,6 @@ class WecimaProvider : MainAPI() {
             "updown" to "https://mawdhou3.com/scrapefinal/updown.php?api=",
             "uqload" to "https://mawdhou3.com/scrapefinal/uqload.php?api=",
             "ukrcdn" to "https://mawdhou3.com/scrapefinal/ukrcdn.php?api=",
-            "test-stream" to "https://mawdhou3.com/scrapefinal/stream.developer.php?api=",
             "vidoba" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
             "vidroba" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
             "mwdy" to "https://mawdhou3.com/scrapefinal/turki.php?api=",
@@ -76,6 +75,8 @@ class WecimaProvider : MainAPI() {
         // two-step recipes (from the app hosts/config urlsite "steps")
         private const val STEP1_MZFI = "https://flech.tn/amine/movibox/step1_prepare_movibox.php"
         private const val STEP1_OSTV = "https://flech.tn/scrapefinal/dramabox/step1_prepare_oscar.php"
+        // test-stream.developer-pro.workers.dev/video?url= -> OK.ru CDN multi-quality
+        private const val SCRAPER_STREAM_DEV = "https://mawdhou3.com/scrapefinal/stream.developer.php?api="
 
         private val json = Json { ignoreUnknownKeys = true }
     }
@@ -270,8 +271,9 @@ class WecimaProvider : MainAPI() {
                 val server = p[0]
                 val link = p[1]
                 val ua = p.getOrNull(2)?.takeIf { it.isNotBlank() } ?: CHROME_UA
-                val referer = p.getOrNull(3)?.takeIf { it.isNotBlank() }
-                    ?: ("https://" + (Uri.parse(link).host ?: "") + "/")
+                // the API's `header` field is NOT a playback referer (it broke gamescdn/yandex with 403)
+                // -> always use the embed page origin, and drop it entirely for token/redirect CDNs
+                val referer = "https://" + (Uri.parse(link).host ?: "") + "/"
                 if (!link.startsWith("http")) continue
 
                 // 1) direct stream links (seriesmp4 .mp4 links are HTML wrappers -> resolveEmbed)
@@ -288,8 +290,13 @@ class WecimaProvider : MainAPI() {
                     continue
                 }
                 // 3) local + mawdhou3 resolvers (egybestvid, seriesmp4, vidtube, updown, uqload...)
-                resolveEmbed(link)?.forEach { (u, label) ->
-                    emit(callback, u, if (label.isBlank()) server else "$server $label", ua, referer)
+                resolveEmbed(link, ua)?.forEach { (u, label) ->
+                    // these CDNs 403 on any Referer (yandex, gamescdn, ok.ru, google photos proxy)
+                    val ref = if (u.contains("yandex") || u.contains("gamescdn") ||
+                        u.contains("vkuser") || u.contains("okcdn") ||
+                        u.contains("googleusercontent") || u.contains("hrrejhp")
+                    ) "" else referer
+                    emit(callback, u, if (label.isBlank()) server else "$server $label", ua, ref)
                     got = true
                 }
             } catch (_: Exception) {
@@ -314,11 +321,12 @@ class WecimaProvider : MainAPI() {
     }
 
     /** all the custom resolvers (from the app hosts/config recipes + live-verified) */
-    private suspend fun resolveEmbed(link: String): List<Pair<String, String>>? = try {
+    private suspend fun resolveEmbed(link: String, ua: String): List<Pair<String, String>>? = try {
         when {
             link.contains("egybestvid") -> {
                 // the embed page carries the master playlist inline: file:"https://.../master.m3u8?..."
-                val t = app.get(link, headers = mapOf("User-Agent" to CHROME_UA)).text
+                // fetch with the SAME UA used for playback (token is UA-bound -> mismatch = 403 on segments)
+                val t = app.get(link, headers = mapOf("User-Agent" to ua)).text
                 Regex("file:\\s*\"(https[^\"]+)\"").findAll(t).mapNotNull { m ->
                     m.groupValues.getOrNull(1)?.takeIf { it.contains(".m3u8") }?.let { it to "" }
                 }.toList().ifEmpty { null }
@@ -332,6 +340,10 @@ class WecimaProvider : MainAPI() {
                     Regex("iframe[^>]+src=\"([^\"]+)\"").find(t)?.groupValues?.get(1)
                         ?.replace("&" + "amp;", "&")?.takeIf { it.startsWith("http") }?.let { listOf(it to "") }
                 }
+            }
+            link.contains("test-stream") -> {
+                // /video?url= pages resolve via mawdhou3 -> OK.ru CDN files (file+label)
+                parseScrape(app.get(SCRAPER_STREAM_DEV + Uri.encode(link), headers = mapOf("User-Agent" to CHROME_UA)).text)
             }
             link.contains("developer-pro.workers.dev") -> {
                 // get-links 302s straight to the OK.ru CDN file -> direct
