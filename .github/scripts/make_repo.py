@@ -155,7 +155,7 @@ PLUGINS = [
         "internalName": "Wecima",
         "name": "Wecima",
         "iconUrl": None,
-        "version": 2,
+        "version": 3,
         "tvTypes": ["Movie", "TvSeries", "Anime"],
         "language": "ar",
     },
