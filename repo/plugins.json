@@ -345,6 +345,26 @@
     "iconUrl": null,
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 28066,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Anime"
+    ],
+    "version": 1,
+    "internalName": "Wecima",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Wecima.cs3",
+    "name": "Wecima"
+  },
+  {
+    "iconUrl": null,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
     "fileSize": 1934385,
     "status": 1,
     "language": "en",

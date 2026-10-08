@@ -152,6 +152,14 @@ PLUGINS = [
         "language": "ar",
     },
     {
+        "internalName": "Wecima",
+        "name": "Wecima",
+        "iconUrl": None,
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries", "Anime"],
+        "language": "ar",
+    },
+    {
         "internalName": "StreamPlay",
         "name": "StreamPlay",
         "iconUrl": None,
