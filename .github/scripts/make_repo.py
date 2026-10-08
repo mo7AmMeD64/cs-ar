@@ -160,6 +160,14 @@ PLUGINS = [
         "language": "ar",
     },
     {
+        "internalName": "VioLa",
+        "name": "Vio-La",
+        "iconUrl": None,
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries"],
+        "language": "ar",
+    },
+    {
         "internalName": "StreamPlay",
         "name": "StreamPlay",
         "iconUrl": None,
