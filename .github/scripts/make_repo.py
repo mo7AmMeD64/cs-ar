@@ -160,6 +160,14 @@ PLUGINS = [
         "language": "ar",
     },
     {
+        "internalName": "OscarTv",
+        "name": "Oscar TV",
+        "iconUrl": None,
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries", "Anime", "TvChannel"],
+        "language": "ar",
+    },
+    {
         "internalName": "FaselMeta",
         "name": "FaselHD Meta",
         "iconUrl": None,
