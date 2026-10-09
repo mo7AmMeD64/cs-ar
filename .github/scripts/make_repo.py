@@ -163,7 +163,7 @@ PLUGINS = [
         "internalName": "FaselMeta",
         "name": "FaselHD Meta",
         "iconUrl": None,
-        "version": 1,
+        "version": 2,
         "tvTypes": ["Movie", "TvSeries", "Anime"],
         "language": "ar",
     },
