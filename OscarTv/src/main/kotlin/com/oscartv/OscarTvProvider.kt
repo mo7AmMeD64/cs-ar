@@ -100,8 +100,8 @@ class OscarTvProvider : MainAPI() {
     override val mainPage = mainPageOf(
         "movies_top" to "رائج اليوم",
         "latest_episodes" to "أحدث الحلقات",
-        "oscar://arseries/" to "أحدث الإضافات العربية",
-        "oscar://armovies/" to "أحدث الأفلام العربية",
+        "armovies" to "أحدث الأفلام العربية",
+        "arseries" to "أحدث الإضافات العربية",
         "oscar://movies/" to "أفلام",
         "oscar://series/" to "مسلسلات",
         "oscar://anime/" to "أنمي",
@@ -111,11 +111,21 @@ class OscarTvProvider : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val data = request.data
         val items: List<SearchResponse> = when {
-            data == "movies_top" || data == "latest_episodes" -> {
+            data == "movies_top" || data == "latest_episodes" || data == "armovies" || data == "arseries" -> {
                 if (page > 1) emptyList() else {
                     val home = call("api/v2/home.php?app_version=15") ?: return newHomePageResponse(request.name, emptyList())
                     val sections = (home["data"] as? JsonObject)?.arr("sections") ?: emptyList()
-                    val sec = sections.firstOrNull { it.str("section_type") == data } ?: return newHomePageResponse(request.name, emptyList())
+                    val sec = when (data) {
+                        "armovies" -> sections.firstOrNull {
+                            it.str("section_type") == "movies" &&
+                                ((it["content_filters"] as? JsonObject)?.int("category_id") == 3 || it.str("title_ar") == "أحدث الأفلام العربية")
+                        }
+                        "arseries" -> sections.firstOrNull {
+                            it.str("section_type") == "latest_additions" &&
+                                (it.int("content_category_filter") == 1 || it.str("title_ar") == "أحدث الإضافات العربية")
+                        }
+                        else -> sections.firstOrNull { it.str("section_type") == data }
+                    } ?: return newHomePageResponse(request.name, emptyList())
                     sec.arr("items").mapNotNull { o ->
                         if (o.containsKey("home_team")) return@mapNotNull null
                         val id = o.int("item_id") ?: o.int("id") ?: return@mapNotNull null
@@ -140,8 +150,6 @@ class OscarTvProvider : MainAPI() {
                     }
                 }
             }
-            data.startsWith("oscar://arseries/") -> list("api/series/?page=$page&limit=20&language=ar", TvType.TvSeries)
-            data.startsWith("oscar://armovies/") -> list("api/movies/?page=$page&limit=20&language=ar", TvType.Movie)
             data.startsWith("oscar://movies/") -> list("api/movies/?page=$page&limit=20", TvType.Movie)
             data.startsWith("oscar://series/") -> list("api/series/?page=$page&limit=20", TvType.TvSeries)
             data.startsWith("oscar://anime/") -> list("api/anime/?page=$page&limit=20&anime_type=tv,ova,ona,special,movie", TvType.Anime)
