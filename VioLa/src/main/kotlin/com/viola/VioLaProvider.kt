@@ -126,34 +126,34 @@ class VioLaProvider : MainAPI() {
         val plot = Regex("""property="og:description" content="([^"]+)"""").find(html)?.groupValues?.getOrNull(1)
         val year = Regex("""datePublished" content="(\d{4})""").find(html)?.groupValues?.getOrNull(1)?.toIntOrNull()
 
-        // series page: SeasonsBox with season tabs -> episode links
-        if (html.contains("SeasonsBox")) {
-            val doc = Jsoup.parse(html, mainUrl)
-            val episodes = mutableListOf<Episode>()
-            doc.select("div[id^=Season]").forEachIndexed { sIdx, tab ->
-                val season = sIdx + 1
-                tab.select("a[href*='watch.php?vid=']").forEach { a ->
-                    val epid = vidOf(a.attr("href")) ?: return@forEach
-                    val t = a.attr("title").ifBlank { a.text().trim() }
-                    val epNum = Regex("الحلقة\\s*([0-9\u0660-\u0669]+)")
-                        .find(t)?.groupValues?.getOrNull(1)
-                        ?.map { ch -> if (ch in '\u0660'..'\u0669') ('0' + (ch - '\u0660')) else ch }
-                        ?.joinToString("")?.toIntOrNull()
-                        ?: (episodes.count { it.season == season } + 1)
-                    episodes.add(
-                        newEpisode(
-                            url = "viola://p/$epid",
-                            initializer = {
-                                this.name = t
-                                this.season = season
-                                this.episode = epNum
-                            },
-                            fix = false,
-                        )
+        // parse season tabs FIRST - movie pages also mention "SeasonsBox" in a CSS
+        // wrapper class, so decide by parsed episodes only (never by that string)
+        val doc = Jsoup.parse(html, mainUrl)
+        val episodes = mutableListOf<Episode>()
+        doc.select("div[id^=Season]").forEachIndexed { sIdx, tab ->
+            val season = sIdx + 1
+            tab.select("a[href*='watch.php?vid=']").forEach { a ->
+                val epid = vidOf(a.attr("href")) ?: return@forEach
+                val t = a.attr("title").ifBlank { a.text().trim() }
+                val epNum = Regex("الحلقة\\s*([0-9\u0660-\u0669]+)")
+                    .find(t)?.groupValues?.getOrNull(1)
+                    ?.map { ch -> if (ch in '\u0660'..'\u0669') ('0' + (ch - '\u0660')) else ch }
+                    ?.joinToString("")?.toIntOrNull()
+                    ?: (episodes.count { it.season == season } + 1)
+                episodes.add(
+                    newEpisode(
+                        url = "viola://p/$epid",
+                        initializer = {
+                            this.name = t
+                            this.season = season
+                            this.episode = epNum
+                        },
+                        fix = false,
                     )
-                }
+                )
             }
-            if (episodes.isEmpty()) return null
+        }
+        if (episodes.isNotEmpty()) {
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
                 this.plot = plot

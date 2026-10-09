@@ -163,7 +163,7 @@ PLUGINS = [
         "internalName": "VioLa",
         "name": "Vio-La",
         "iconUrl": None,
-        "version": 1,
+        "version": 2,
         "tvTypes": ["Movie", "TvSeries"],
         "language": "ar",
     },
