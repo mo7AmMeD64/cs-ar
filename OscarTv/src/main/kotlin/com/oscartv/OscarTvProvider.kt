@@ -62,7 +62,7 @@ class OscarTvProvider : MainAPI() {
         if (h == null) return null
         val headers = h.entries.mapNotNull { (k, v) ->
             (v as? kotlinx.serialization.json.JsonPrimitive)?.content?.let { k to it }
-        }.toMap()
+        }.filter { it.first !in setOf("Host", "Connection") }.toMap()
         (app.get(url, headers = headers).text).jsonObjectSafe()
     } catch (_: Exception) { null }
 
