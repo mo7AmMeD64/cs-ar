@@ -98,9 +98,7 @@ class OscarTvProvider : MainAPI() {
     // ---------- catalog ----------
 
     override val mainPage = mainPageOf(
-        "movies_spotlight" to "أفلام مميزة",
         "movies_top" to "رائج اليوم",
-        "series_spotlight" to "مسلسلات مميزة",
         "latest_episodes" to "أحدث الحلقات",
         "oscar://movies/" to "أفلام",
         "oscar://series/" to "مسلسلات",
@@ -111,7 +109,7 @@ class OscarTvProvider : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val data = request.data
         val items: List<SearchResponse> = when {
-            data == "movies_spotlight" || data == "movies_top" || data == "series_spotlight" || data == "latest_episodes" -> {
+            data == "movies_top" || data == "latest_episodes" -> {
                 if (page > 1) emptyList() else {
                     val home = call("api/v2/home.php?app_version=15") ?: return newHomePageResponse(request.name, emptyList())
                     val sections = (home["data"] as? JsonObject)?.arr("sections") ?: emptyList()
