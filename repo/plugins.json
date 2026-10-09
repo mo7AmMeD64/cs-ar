@@ -362,6 +362,82 @@
     "name": "Wecima"
   },
   {
+    "iconUrl": "https://aflaam.com/style/assets/images/logo.png",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 15153,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 1,
+    "internalName": "Aflaam",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Aflaam.cs3",
+    "name": "Aflaam"
+  },
+  {
+    "iconUrl": "https://3esk.onl/wp-content/uploads/2021/01/3isk-logo.png",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 31989,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 1,
+    "internalName": "3isk",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/3isk.cs3",
+    "name": "قصة عشق"
+  },
+  {
+    "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2vuGLv4zY3XpoN2jza2unCQ95xFfypfe-h3k3xteMbGxl7taw-ziXyNg&s=10",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 27801,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 3,
+    "internalName": "Akwam",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Akwam.cs3",
+    "name": "Akwam"
+  },
+  {
+    "iconUrl": "https://fitnur.com/uploads/avatars/c5ae8dadf88bcea9549657ec451a1563.jpg",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 14240,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 1,
+    "internalName": "Alooytv",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Alooytv.cs3",
+    "name": "AlooyTv"
+  },
+  {
     "iconUrl": null,
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
