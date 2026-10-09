@@ -362,6 +362,26 @@
     "name": "Wecima"
   },
   {
+    "iconUrl": null,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 10874,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Anime"
+    ],
+    "version": 1,
+    "internalName": "FaselMeta",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/FaselMeta.cs3",
+    "name": "FaselHD Meta"
+  },
+  {
     "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxoF3lscri32oVf0iQlhbjFEoUn2xg3OmQIx4wYdDmqw&s",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
