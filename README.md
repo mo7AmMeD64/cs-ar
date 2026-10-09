@@ -41,6 +41,10 @@ https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
 <li>YACINE TV</li>
 <li>Stream play</li>
 <li>Vio-la</li>
+<li>Akwam</li>
+<li>Aflaam</li>
+<li>Alooy-tv</li>
+<li>3isk</li>
 </ul>
 
 <h2> الهدف</h2>
