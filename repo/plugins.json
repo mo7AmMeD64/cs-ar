@@ -362,6 +362,27 @@
     "name": "Wecima"
   },
   {
+    "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxoF3lscri32oVf0iQlhbjFEoUn2xg3OmQIx4wYdDmqw&s",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 44729,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Anime",
+      "AsianDrama"
+    ],
+    "version": 1,
+    "internalName": "MyCimaProvider",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/MyCimaProvider.cs3",
+    "name": "MyCima"
+  },
+  {
     "iconUrl": "https://aflaam.com/style/assets/images/logo.png",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",

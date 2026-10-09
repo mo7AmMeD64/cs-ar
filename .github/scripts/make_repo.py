@@ -160,6 +160,14 @@ PLUGINS = [
         "language": "ar",
     },
     {
+        "internalName": "MyCimaProvider",
+        "name": "MyCima",
+        "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxoF3lscri32oVf0iQlhbjFEoUn2xg3OmQIx4wYdDmqw&s",
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries", "Anime", "AsianDrama"],
+        "language": "ar",
+    },
+    {
         "internalName": "Aflaam",
         "name": "Aflaam",
         "iconUrl": "https://aflaam.com/style/assets/images/logo.png",
