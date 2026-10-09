@@ -163,7 +163,7 @@ PLUGINS = [
         "internalName": "OscarTv",
         "name": "Oscar TV",
         "iconUrl": None,
-        "version": 1,
+        "version": 2,
         "tvTypes": ["Movie", "TvSeries", "Anime", "TvChannel"],
         "language": "ar",
     },
