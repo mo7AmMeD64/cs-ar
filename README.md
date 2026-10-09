@@ -45,6 +45,9 @@ https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
 <li>Aflaam</li>
 <li>Alooy-tv</li>
 <li>3isk</li>
+<li>myCima</li>
+<li>Oscar tv</li>
+<li>weCima</li>
 </ul>
 
 <h2> الهدف</h2>
