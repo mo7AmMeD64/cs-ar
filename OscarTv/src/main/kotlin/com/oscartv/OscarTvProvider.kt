@@ -100,6 +100,8 @@ class OscarTvProvider : MainAPI() {
     override val mainPage = mainPageOf(
         "movies_top" to "رائج اليوم",
         "latest_episodes" to "أحدث الحلقات",
+        "oscar://arseries/" to "أحدث الإضافات العربية",
+        "oscar://armovies/" to "أحدث الأفلام العربية",
         "oscar://movies/" to "أفلام",
         "oscar://series/" to "مسلسلات",
         "oscar://anime/" to "أنمي",
@@ -138,6 +140,8 @@ class OscarTvProvider : MainAPI() {
                     }
                 }
             }
+            data.startsWith("oscar://arseries/") -> list("api/series/?page=$page&limit=20&language=ar", TvType.TvSeries)
+            data.startsWith("oscar://armovies/") -> list("api/movies/?page=$page&limit=20&language=ar", TvType.Movie)
             data.startsWith("oscar://movies/") -> list("api/movies/?page=$page&limit=20", TvType.Movie)
             data.startsWith("oscar://series/") -> list("api/series/?page=$page&limit=20", TvType.TvSeries)
             data.startsWith("oscar://anime/") -> list("api/anime/?page=$page&limit=20&anime_type=tv,ova,ona,special,movie", TvType.Anime)
