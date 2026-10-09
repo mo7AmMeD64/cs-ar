@@ -83,7 +83,8 @@ class OscarTvProvider : MainAPI() {
         return if (tvType == TvType.Movie) {
             newMovieSearchResponse(title, "oscar://movie/$id", TvType.Movie) { this.posterUrl = poster }
         } else {
-            newTvSeriesSearchResponse(title, "oscar://$tvType/$id", tvType) { this.posterUrl = poster }
+            val kind = if (tvType == TvType.Anime) "anime" else "serie"
+            newTvSeriesSearchResponse(title, "oscar://$kind/$id", tvType) { this.posterUrl = poster }
         }
     }
 
@@ -116,8 +117,19 @@ class OscarTvProvider : MainAPI() {
                     val sections = (home["data"] as? JsonObject)?.arr("sections") ?: emptyList()
                     val sec = sections.firstOrNull { it.str("section_type") == data } ?: return newHomePageResponse(request.name, emptyList())
                     sec.arr("items").mapNotNull { o ->
-                        val itemType = o.str("item_type")
+                        if (o.containsKey("home_team")) return@mapNotNull null
                         val id = o.int("item_id") ?: o.int("id") ?: return@mapNotNull null
+                        val sTitle = o.str("series_title")
+                        if (sTitle != null && o.containsKey("season_id")) {
+                            val sn = o.int("season_number") ?: 1
+                            val ep = o.int("episode_number") ?: 0
+                            val epPoster = o.str("series_poster", "series_banner")?.let { if (it.startsWith("http")) it else "$mainUrl$it" }
+                            return@mapNotNull newMovieSearchResponse(
+                                if (sn > 1) "$sTitle — م$sn:ح$ep" else "$sTitle — حلقة $ep",
+                                "oscar://ep/$id", TvType.Movie
+                            ) { this.posterUrl = epPoster }
+                        }
+                        val itemType = o.str("item_type") ?: if (o.containsKey("episode_count")) "serie" else "movie"
                         val title = o.str("title_ar", "title_en") ?: return@mapNotNull null
                         val poster = o.str("poster", "image")?.let { if (it.startsWith("http")) it else "$mainUrl$it" }
                         when (itemType) {
@@ -193,10 +205,43 @@ class OscarTvProvider : MainAPI() {
                     this.tags = tags
                 }
             }
-            kind == "serie" || kind == "anime" || kind == "tv" -> {
-                val isAnime = kind == "anime"
+            kind == "ep" -> {
+                var d = call("api/episodes/show.php?id=$id")?.data()
+                var anime = false
+                if (d == null) {
+                    d = call("api/anime/episodes/show.php?id=$id")?.data()
+                    anime = true
+                }
+                if (d == null) return null
+                val sTitle = d.str("series_title") ?: d.str("title_ar", "title_en") ?: return null
+                val sn = d.int("season_number") ?: 1
+                val ep = d.int("episode_number") ?: 0
+                newMovieLoadResponse(
+                    if (sn > 1) "$sTitle — م$sn حلقة $ep" else "$sTitle — حلقة $ep",
+                    url, TvType.Movie, "oscar://ep/$anime/$id"
+                ) {
+                    this.posterUrl = d.str("series_poster")?.let { if (it.startsWith("http")) it else "$mainUrl$it" }
+                    this.plot = d.str("description")
+                }
+            }
+            kind == "serie" || kind == "anime" || kind == "tv" || kind == "TvSeries" || kind == "Anime" -> {
+                val isAnime = kind == "anime" || kind == "Anime"
                 val apiBase = if (isAnime) "api/anime" else "api/series"
-                val d = call("$apiBase/show.php?id=$id")?.data() ?: return null
+                var d = call("$apiBase/show.php?id=$id")?.data()
+                if (d == null && !isAnime) {
+                    val m = call("api/movies/show.php?id=$id")?.data()
+                    if (m != null) {
+                        return newMovieLoadResponse(
+                            m.str("title_ar", "title_en") ?: return null, url, TvType.Movie, "oscar://player/movies/$id"
+                        ) {
+                            this.posterUrl = m.poster2()
+                            this.plot = m.str("story")
+                            this.year = m.int("release_year") ?: m.str("release_date")?.take(4)?.toIntOrNull()
+                            this.tags = m.arr("genres").mapNotNull { it.str("name") }
+                        }
+                    }
+                }
+                if (d == null) return null
                 val title = d.str("title_ar", "title_en", "name") ?: return null
                 val seasons = d.arr("seasons")
                 val episodes = coroutineScope {
@@ -245,9 +290,19 @@ class OscarTvProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
         var got = false
+        val seen = HashSet<String>()
 
-        suspend fun emit(u: String, label: String, quality: String?) {
-            if (!u.startsWith("http")) return
+        suspend fun emit(u0: String, label: String, quality: String?) {
+            if (!u0.startsWith("http")) return
+            var u = u0
+            if (u.contains("newcdn.seriesmp4.com")) {
+                u = try {
+                    val body = app.get(u0, headers = mapOf("User-Agent" to PLAY_UA)).text
+                    Regex("src=\"(https://downloader\\.disk\\.yandex\\.ru[^\"]+)\"")
+                        .find(body)?.groupValues?.get(1)?.replace("&" + "amp;", "&") ?: return
+                } catch (_: Exception) { return }
+            }
+            if (!seen.add(u)) return
             callback(
                 newExtractorLink(
                     name,
