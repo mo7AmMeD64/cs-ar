@@ -35,7 +35,6 @@ https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
 <li>MeowTv</li>
 <li>MovieBox</li>
 <li>Topcinema</li>
-<li>Yacintv</li>
 <li>Anime-Phoenix</li>
 <li>Animewitcher</li>
 <li>YACINE TV</li>
