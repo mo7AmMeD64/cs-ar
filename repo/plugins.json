@@ -365,7 +365,7 @@
     "iconUrl": null,
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 34849,
+    "fileSize": 36351,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -377,7 +377,7 @@
       "Anime",
       "TvChannel"
     ],
-    "version": 2,
+    "version": 7,
     "internalName": "OscarTv",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/OscarTv.cs3",
     "name": "Oscar TV"
