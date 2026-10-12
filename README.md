@@ -17,6 +17,14 @@ https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbrCPMjoDiORDnpcSxcPa6g-7bWW31r6-BLQ&s" />
 </a>
 </p>
+<h2> لمستخدمي التلفاز (Android TV)</h2>
+<p>
+اكتب هذا الرمز المختصر بدلا من الرابط الطويل 
+</p>
+
+```text
+iq3
+```
 
 <p>إذا لم يفتح الرابط، غيّر الـ DNS من إعدادات كلاود ستريم ⚙️</p>
 
