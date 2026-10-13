@@ -1,5 +1,9 @@
 <h1 align="center">📺 إضافات عربية لتطبيق كلاود ستريم</h1>
 
+<p align="center">
+  <img src="https://i.ibb.co/whzQVjTT/Project-40-E8-C66-CD.png" alt="screenshot" width="300" />
+</p>
+
 <h3 align="center">
 إضافات عربية لمواقع وتطبيقات بسيرفرات مستقرة ومحتوى واسع
 <br>
