@@ -224,6 +224,14 @@ PLUGINS = [
         "language": "ar",
     },
     {
+        "internalName": "Cee",
+        "name": "Cee",
+        "iconUrl": None,
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries"],
+        "language": "ar",
+    },
+    {
         "internalName": "StreamPlay",
         "name": "StreamPlay",
         "iconUrl": None,
