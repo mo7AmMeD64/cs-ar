@@ -522,6 +522,25 @@
     "iconUrl": null,
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 19355,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 1,
+    "internalName": "Cee",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Cee.cs3",
+    "name": "Cee"
+  },
+  {
+    "iconUrl": null,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
     "fileSize": 1934385,
     "status": 1,
     "language": "en",
