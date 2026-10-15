@@ -43,6 +43,12 @@ class OscarTvProvider : MainAPI() {
 
     private fun JsonObject.int(key: String): Int? = str(key)?.toDoubleOrNull()?.toInt()
 
+    /** CDN guard redirects playback to a 1-min "تنوية" notice without this cookie (from deep_link) */
+    private fun JsonObject.playCookie(): String? = try {
+        str("deep_link")?.substringAfter("cookies=", "")?.takeIf { it.isNotBlank() }
+            ?.substringBefore("&")?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+    } catch (_: Exception) { null }
+
     private fun JsonObject.arr(key: String): List<JsonObject> =
         ((this[key] as? JsonArray)?.mapNotNull { it as? JsonObject }) ?: emptyList()
 
@@ -302,7 +308,7 @@ class OscarTvProvider : MainAPI() {
         var got = false
         val seen = HashSet<String>()
 
-        suspend fun emit(u0: String, label: String, quality: String?) {
+        suspend fun emit(u0: String, label: String, quality: String?, cookie: String? = null) {
             if (!u0.startsWith("http")) return
             var u = u0
             if (u.contains("newcdn.seriesmp4.com")) {
@@ -320,7 +326,8 @@ class OscarTvProvider : MainAPI() {
                     u,
                     if (u.contains(".mp4")) ExtractorLinkType.VIDEO else ExtractorLinkType.M3U8,
                 ) {
-                    this.headers = mapOf("User-Agent" to PLAY_UA)
+                    this.headers = if (cookie.isNullOrBlank()) mapOf("User-Agent" to PLAY_UA)
+                    else mapOf("User-Agent" to PLAY_UA, "Cookie" to cookie)
                     this.quality = quality?.replace("p", "")?.toIntOrNull()
                         ?.let { q -> Qualities.entries.firstOrNull { it.value == q }?.value } ?: Qualities.Unknown.value
                 }
@@ -343,8 +350,8 @@ class OscarTvProvider : MainAPI() {
             data.startsWith("oscar://player/movies/") -> {
                 val id = data.substringAfter("oscar://player/movies/", "")
                 val d = call("api/movies/show.php?id=$id")?.data() ?: return false
-                d.arr("watch_links").forEach { emit(it.str("url") ?: return@forEach, it.str("server_name") ?: "Oscar", it.str("quality")) }
-                d.arr("download_links").forEach { emit(it.str("url") ?: return@forEach, "${it.str("server_name") ?: "DL"}", it.str("quality")) }
+                d.arr("watch_links").forEach { emit(it.str("url") ?: return@forEach, it.str("server_name") ?: "Oscar", it.str("quality"), it.playCookie()) }
+                d.arr("download_links").forEach { emit(it.str("url") ?: return@forEach, "${it.str("server_name") ?: "DL"}", it.str("quality"), it.playCookie()) }
             }
 
             data.startsWith("oscar://ep/") -> {
@@ -353,8 +360,8 @@ class OscarTvProvider : MainAPI() {
                 val id = rest.substringAfter("/")
                 val apiBase = if (isAnime) "api/anime/episodes" else "api/episodes"
                 val d = call("$apiBase/show.php?id=$id")?.data() ?: return false
-                d.arr("watch_links").forEach { emit(it.str("url") ?: return@forEach, it.str("server_name") ?: "Oscar", it.str("quality")) }
-                d.arr("download_links").forEach { emit(it.str("url") ?: return@forEach, "${it.str("server_name") ?: "DL"}", it.str("quality")) }
+                d.arr("watch_links").forEach { emit(it.str("url") ?: return@forEach, it.str("server_name") ?: "Oscar", it.str("quality"), it.playCookie()) }
+                d.arr("download_links").forEach { emit(it.str("url") ?: return@forEach, "${it.str("server_name") ?: "DL"}", it.str("quality"), it.playCookie()) }
             }
         }
         return got
