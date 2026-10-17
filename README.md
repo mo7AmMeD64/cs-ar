@@ -59,6 +59,9 @@ iq3
 <li>myCima</li>
 <li>Oscar tv</li>
 <li>weCima</li>
+<li>ArabSeed</li>
+<li>Cee</li>
+<li>FaselMeta</li>
 </ul>
 
 <h2> الهدف</h2>
