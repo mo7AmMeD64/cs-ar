@@ -1,41 +1,17 @@
 version = 3
 
-plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-}
+cloudstream {
+    description = "أنمي سلاير — مشاهدة وتحميل الأنمي مترجم"
+    authors = listOf("mo7AmMeD64")
+    language = "ar"
 
-repositories {
-    mavenCentral()
-    maven { url = uri("https://jitpack.io") }
-}
+    status = 1
 
-android {
-    namespace = "com.animeslayer"
-    compileSdk = 34
-    defaultConfig {
-        minSdk = 21
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-}
+    tvTypes = listOf(
+        "TvSeries",
+        "Anime",
+        "Movie"
+    )
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-        freeCompilerArgs.addAll(
-            "-XXLanguage:+BreakContinueInInlineLambdas",
-            "-Xskip-metadata-version-check"
-        )
-    }
-}
-
-dependencies {
-    val cloudstream by configurations
-    implementation("com.google.android.material:material:1.13.0")
-    implementation("androidx.browser:browser:1.9.0")
-    implementation("androidx.room:room-ktx:2.8.0")
-    cloudstream("com.lagradost:cloudstream3:pre-release")
+    iconUrl = "https://imgs.search.brave.com/HEQ0yh4UMc8dkTZOs7RRAz7s0pOVz2QlPCK5IZPWQvI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGRiZTMwOWQw/YmFkMjg2NGM0YmQ0/MWNiMzYzMzhjZmVk/Nzc4MTNkZTRjYjg3/ODU1MTM5NDM3Yjlh/NmMzZDNjMS9hbmlt/ZS1zbGF5ZXIubmV0/Lw"
 }

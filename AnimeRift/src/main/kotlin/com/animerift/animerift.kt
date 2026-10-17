@@ -1,12 +1,11 @@
 package com.animerift
 
 import android.util.Base64
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
@@ -29,6 +28,16 @@ class AnimeRift : MainAPI() {
     private val FIREBASE_APP_ID = "RIFT_FIREBASE_APP_ID_PLACEHOLDER"
     private val ANDROID_PACKAGE = "com.riftapps.animerift"
     private val ANDROID_CERT = "AF40CE82A52AA4107F311D8B9727D01C8D02250B"
+
+    // Jackson is not on the plugin classpath — thin kotlinx.serialization helpers replace it
+    private operator fun JsonElement?.get(key: String): JsonElement? = (this as? JsonObject)?.get(key)
+    private fun JsonElement?.s(): String? = (this as? JsonPrimitive)?.contentOrNull
+    private fun JsonElement?.i(): Int? = (this as? JsonPrimitive)?.intOrNull
+    private fun JsonElement?.d(): Double? = (this as? JsonPrimitive)?.doubleOrNull
+    private fun JsonElement?.l(): Long? = (this as? JsonPrimitive)?.longOrNull
+    private fun JsonElement?.b(): Boolean? = (this as? JsonPrimitive)?.booleanOrNull
+    private fun JsonElement?.arr(): List<JsonElement> = (this as? JsonArray) ?: emptyList()
+
     companion object {
         private var fid: String? = null
         private var firebaseToken: String? = null
@@ -43,12 +52,11 @@ class AnimeRift : MainAPI() {
             return File(tmp, "anime_rift_session_store.json")
         }
 
-        
+
         private fun saveToDisk(data: Map<String, String>) {
             try {
                 val file = getCacheFile()
-                val jsonStr = ObjectMapper().writeValueAsString(data)
-                file.writeText(jsonStr)
+                file.writeText(buildJsonObject { data.forEach { (k, v) -> put(k, v) } }.toString())
             } catch (_: Exception) {}
         }
 
@@ -58,15 +66,16 @@ class AnimeRift : MainAPI() {
                 if (file.exists()) {
                     val text = file.readText()
                     if (text.isNotBlank()) {
-                        val node = ObjectMapper().readTree(text)
+                        val node = Json.parseToJsonElement(text)
+                        fun f(key: String): String = (node as? JsonObject)?.get(key)?.let { (it as? JsonPrimitive)?.contentOrNull } ?: ""
                         mapOf(
-                            "fid" to (node.get("fid")?.asText() ?: ""),
-                            "firebaseToken" to (node.get("firebaseToken")?.asText() ?: ""),
-                            "gatewayBaseUrl" to (node.get("gatewayBaseUrl")?.asText() ?: ""),
-                            "deviceId" to (node.get("deviceId")?.asText() ?: ""),
-                            "sessionKey" to (node.get("sessionKey")?.asText() ?: ""),
-                            "syntheticBuildId" to (node.get("syntheticBuildId")?.asText() ?: ""),
-                            "syntheticDeviceInfoJson" to (node.get("syntheticDeviceInfoJson")?.asText() ?: "")
+                            "fid" to f("fid"),
+                            "firebaseToken" to f("firebaseToken"),
+                            "gatewayBaseUrl" to f("gatewayBaseUrl"),
+                            "deviceId" to f("deviceId"),
+                            "sessionKey" to f("sessionKey"),
+                            "syntheticBuildId" to f("syntheticBuildId"),
+                            "syntheticDeviceInfoJson" to f("syntheticDeviceInfoJson")
                         )
                     } else null
                 } else null
@@ -76,7 +85,6 @@ class AnimeRift : MainAPI() {
         }
     }
 
-    private val mapper = ObjectMapper()
     private fun generateSyntheticDevice(): Pair<String, String> {
         val brands = listOf(
             Triple("google", "Google", "Pixel 8 Pro"),
@@ -89,25 +97,25 @@ class AnimeRift : MainAPI() {
         val buildId = "AP2A.240805.$randomNum"
         val uniqueTag = UUID.randomUUID().toString().substring(0, 8)
 
-        val deviceInfo = mapOf(
-            "model" to selected.third,
-            "brand" to selected.first,
-            "manufacturer" to selected.second,
-            "device" to selected.first,
-            "hardware" to "qcom",
-            "product" to selected.first,
-            "androidVersion" to "14",
-            "sdkInt" to 34,
-            "securityPatch" to "2025-01-01",
-            "isPhysicalDevice" to true,
-            "supportedAbis" to listOf("arm64-v8a"),
-            "tags" to "release-keys",
-            "type" to "user",
-            "buildId" to buildId,
-            "host" to "build-server-$uniqueTag",
-            "fingerprint" to "${selected.first}/${selected.third}/${selected.first}:14/$buildId/V.1e9a_$uniqueTag:user/release-keys"
-        )
-        return Pair(buildId, mapper.writeValueAsString(deviceInfo))
+        val deviceInfo = buildJsonObject {
+            put("model", selected.third)
+            put("brand", selected.first)
+            put("manufacturer", selected.second)
+            put("device", selected.first)
+            put("hardware", "qcom")
+            put("product", selected.first)
+            put("androidVersion", "14")
+            put("sdkInt", 34)
+            put("securityPatch", "2025-01-01")
+            put("isPhysicalDevice", true)
+            put("supportedAbis", JsonArray(listOf("arm64-v8a").map { JsonPrimitive(it) }))
+            put("tags", "release-keys")
+            put("type", "user")
+            put("buildId", buildId)
+            put("host", "build-server-$uniqueTag")
+            put("fingerprint", "${selected.first}/${selected.third}/${selected.first}:14/$buildId/V.1e9a_$uniqueTag:user/release-keys")
+        }
+        return Pair(buildId, deviceInfo.toString())
     }
 
     private fun base64UrlEncode(bytes: ByteArray): String {
@@ -208,9 +216,9 @@ class AnimeRift : MainAPI() {
 
         val response = app.baseClient.newCall(request).execute()
         val body = response.body?.string() ?: throw Exception("No response from Firebase")
-        val json = mapper.readTree(body)
-        fid = json.get("fid").asText()
-        firebaseToken = json.get("authToken").get("token").asText()
+        val json = Json.parseToJsonElement(body)
+        fid = json["fid"]?.s() ?: throw Exception("Firebase init failed")
+        firebaseToken = json["authToken"]["token"]?.s() ?: throw Exception("Firebase auth failed")
     }
 
     private suspend fun fetchRemoteConfig() {
@@ -235,8 +243,8 @@ class AnimeRift : MainAPI() {
             "Content-Type" to "application/json"
         )
 
-        val json = app.post(url, headers = headers, json = payload).parsed<JsonNode>()
-        gatewayBaseUrl = json.get("entries")?.get("anime_rift_android_gateway_base_url_v4")?.asText()?.replace("\"", "") ?: mainUrl
+        val json = app.post(url, headers = headers, json = payload).parsed<JsonObject>()
+        gatewayBaseUrl = json["entries"]["anime_rift_android_gateway_base_url_v4"]?.s()?.replace("\"", "") ?: mainUrl
     }
 
     private suspend fun registerDevice() {
@@ -262,10 +270,10 @@ class AnimeRift : MainAPI() {
         )
 
         val json = apiCall(url, "USER.AUTH.DEVICE.REGISTER", "POST", payload)
-        sessionKey = json.get("sessionKey")?.asText()
+        sessionKey = json["sessionKey"]?.s()
     }
 
-    private suspend fun apiCall(url: String, scope: String, method: String = "GET", body: Map<String, Any?>? = null, isRetry: Boolean = false): JsonNode {
+    private suspend fun apiCall(url: String, scope: String, method: String = "GET", body: Map<String, Any?>? = null, isRetry: Boolean = false): JsonObject {
         ensureInitialized()
         val integrityToken = generateIntegrityToken(scope)
         val timezone = generateDeviceTimezone()
@@ -294,7 +302,7 @@ class AnimeRift : MainAPI() {
                 "PUT" -> app.put(url, headers = headers, json = body)
                 else -> app.get(url, headers = headers)
             }
-            return response.parsed<JsonNode>()
+            return response.parsed<JsonObject>()
         } catch (e: Exception) {
             if (!isRetry && (e.message?.contains("401") == true || e.message?.contains("403") == true)) {
                 ensureInitialized(forceRefresh = true)
@@ -315,22 +323,22 @@ class AnimeRift : MainAPI() {
         val json = apiCall(url, "ANIME.LIBRARY.HOME_CONTENT")
 
         val homeLists = mutableListOf<HomePageList>()
-        val sections = json.get("sections")
+        val sections = json["sections"]
 
-        sections?.forEach { section ->
-            val title = section.get("sectionTitle")?.asText() ?: ""
-            val items = section.get("items")
+        sections.arr().forEach { section ->
+            val title = section["sectionTitle"]?.s() ?: ""
+            val items = section["items"]
             val list = mutableListOf<SearchResponse>()
 
-            items?.forEach { item ->
-                val ratingFloat = item.get("myAnimeList_rating")?.asDouble()?.toFloat()
+            items.arr().forEach { item ->
+                val ratingFloat = item["myAnimeList_rating"]?.d()?.toFloat()
                 list.add(
                     newAnimeSearchResponse(
-                        name = item.get("title")?.asText() ?: "",
-                        url = "$mainUrl/api/v4/library/details/${item.get("_id")?.asText()}"
+                        name = item["title"]?.s() ?: "",
+                        url = "$mainUrl/api/v4/library/details/${item["_id"]?.s()}"
                     ) {
-                        this.posterUrl = item.get("medium_picture")?.asText() ?: item.get("main_picture")?.asText()
-                        this.year = item.get("release_year")?.asInt()
+                        this.posterUrl = item["medium_picture"]?.s() ?: item["main_picture"]?.s()
+                        this.year = item["release_year"]?.i()
                         this.score = ratingFloat?.let { Score.from10(it) }
                     }
                 )
@@ -354,24 +362,24 @@ class AnimeRift : MainAPI() {
 
         return try {
             val json = apiCall(url, "ANIME.LIBRARY.SEARCH", method = "POST", body = mapOf("query" to query))
-            val items = json.get("items") ?: return null
+            val items = json["items"] ?: return null
 
             val results = mutableListOf<SearchResponse>()
-            items.forEach { item ->
-                val ratingFloat = item.get("myAnimeList_rating")?.asDouble()?.toFloat()
+            items.arr().forEach { item ->
+                val ratingFloat = item["myAnimeList_rating"]?.d()?.toFloat()
                 results.add(
                     newAnimeSearchResponse(
-                        name = item.get("title")?.asText() ?: "",
-                        url = "$mainUrl/api/v4/library/details/${item.get("_id")?.asText()}"
+                        name = item["title"]?.s() ?: "",
+                        url = "$mainUrl/api/v4/library/details/${item["_id"]?.s()}"
                     ) {
-                        this.posterUrl = item.get("medium_picture")?.asText() ?: item.get("main_picture")?.asText()
-                        this.year = item.get("release_year")?.asInt()
+                        this.posterUrl = item["medium_picture"]?.s() ?: item["main_picture"]?.s()
+                        this.year = item["release_year"]?.i()
                         this.score = ratingFloat?.let { Score.from10(it) }
                     }
                 )
             }
 
-            val hasNext = json.get("hasNext")?.asBoolean() ?: false
+            val hasNext = json["hasNext"]?.b() ?: false
             newSearchResponseList(results, hasNext)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -385,19 +393,19 @@ class AnimeRift : MainAPI() {
         val animeId = url.substringAfterLast("/")
         val detailUrl = "$baseUrl/library/details/$animeId"
         val json = apiCall(detailUrl, "ANIME.LIBRARY.DETAILS")
-        val item = json.get("item") ?: throw ErrorLoadingException("Failed to load anime details")
+        val item = json["item"] ?: throw ErrorLoadingException("Failed to load anime details")
 
         val allRelated = mutableListOf<AnimeSearchResponse>()
-        val others = json.get("others")
+        val others = json["others"]
 
-        others?.get("recommendations")?.forEach { rec ->
-            val recRating = rec.get("myAnimeList_rating")?.asDouble()?.toFloat()
+        others["recommendations"].arr().forEach { rec ->
+            val recRating = rec["myAnimeList_rating"]?.d()?.toFloat()
             allRelated.add(
                 newAnimeSearchResponse(
-                    name = rec.get("title")?.asText() ?: "",
-                    url = "$mainUrl/api/v4/library/details/${rec.get("_id")?.asText()}"
+                    name = rec["title"]?.s() ?: "",
+                    url = "$mainUrl/api/v4/library/details/${rec["_id"]?.s()}"
                 ) {
-                    this.posterUrl = rec.get("main_picture")?.asText()
+                    this.posterUrl = rec["main_picture"]?.s()
                     this.score = recRating?.let { Score.from10(it) }
                 } as AnimeSearchResponse
             )
@@ -407,15 +415,15 @@ class AnimeRift : MainAPI() {
         try {
             val episodeUrl = "$baseUrl/library/episodes/$animeId?sort_by_latest=1&with_arcs=true&with_favorites=true"
             val epJson = apiCall(episodeUrl, "ANIME.LIBRARY.EPISODES.ALL")
-            epJson.get("items")?.forEach { ep ->
-                val epNumber = ep.get("episode_number")?.asInt() ?: 1
-                val epId = ep.get("_id")?.asText() ?: ""
+            epJson["items"].arr().forEach { ep ->
+                val epNumber = ep["episode_number"]?.i() ?: 1
+                val epId = ep["_id"]?.s() ?: ""
                 episodesList.add(
                     newEpisode(data = "$animeId|$epId|$epNumber") {
                         this.name = "الحلقة $epNumber"
                         this.episode = epNumber
                         this.season = 1
-                        this.posterUrl = ep.get("thumbnail")?.asText()
+                        this.posterUrl = ep["thumbnail"]?.s()
                     }
                 )
             }
@@ -423,19 +431,19 @@ class AnimeRift : MainAPI() {
             e.printStackTrace()
         }
 
-        val ratingFloat = item.get("myAnimeList_rating")?.asDouble()?.toFloat()
+        val ratingFloat = item["myAnimeList_rating"]?.d()?.toFloat()
 
         return newAnimeLoadResponse(
-            name = item.get("title")?.asText() ?: "",
+            name = item["title"]?.s() ?: "",
             url = url,
             type = TvType.Anime
         ) {
-            this.posterUrl = item.get("main_picture")?.asText()
-            this.plot = item.get("synopsis")?.asText()
-            this.year = item.get("release_year")?.asInt()
+            this.posterUrl = item["main_picture"]?.s()
+            this.plot = item["synopsis"]?.s()
+            this.year = item["release_year"]?.i()
             this.score = ratingFloat?.let { Score.from10(it) }
-            this.tags = item.get("genreLabels")?.mapNotNull { it.get("label")?.asText() }
-            this.showStatus = when (item.get("release_status")?.asText()) {
+            this.tags = item["genreLabels"].arr().mapNotNull { it["label"]?.s() }
+            this.showStatus = when (item["release_status"]?.s()) {
                 "on_going" -> ShowStatus.Ongoing
                 "finished" -> ShowStatus.Completed
                 else -> null
@@ -457,7 +465,7 @@ class AnimeRift : MainAPI() {
             val animeId = parts[0]
             val episodeId = parts[1]
             val episodeNumber = parts.getOrNull(2)?.toIntOrNull() ?: 1
-            
+
             val baseUrl = gatewayBaseUrl ?: mainUrl
             val sourcesUrl = "$baseUrl/library/episode/sources"
             val sourcesBody = mapOf(
@@ -466,32 +474,28 @@ class AnimeRift : MainAPI() {
                 "episode_number" to episodeNumber
             )
             val sourcesJson = apiCall(sourcesUrl, "ANIME.LIBRARY.EPISODES.SOURCES.ALL", method = "POST", body = sourcesBody)
-            val items = sourcesJson.get("items") ?: return@withContext false
+            val items = sourcesJson["items"]?.arr() ?: return@withContext false
 
             val priorityProviders = listOf("cr2", "rift-streamer", "streamtape")
             val filteredItems = items.filter { src ->
-                val subTitle = src.get("sub_title")?.asText() ?: ""
+                val subTitle = src["sub_title"]?.s() ?: ""
                 subTitle.startsWith("ar_") || subTitle.isEmpty()
             }.ifEmpty { items.toList() }
 
             val sortedItems = filteredItems.sortedBy { src ->
-                val provider = src.get("provider")?.asText() ?: ""
+                val provider = src["provider"]?.s() ?: ""
                 val index = priorityProviders.indexOf(provider)
                 if (index != -1) index else 99
             }.take(6)
 
             sortedItems.forEach { src ->
-                val hostId = src.get("_id")?.asText() ?: return@forEach
-                val serverName = src.get("server_name")?.asText() ?: "Server"
-                val provider = src.get("provider")?.asText() ?: ""
-                val subTitle = src.get("sub_title")?.asText() ?: ""
-                
-                val qualitiesNode = src.get("qualities")
-                val qualitiesList = if (qualitiesNode != null && qualitiesNode.isArray && qualitiesNode.size() > 0) {
-                    qualitiesNode.map { it.asText() }
-                } else {
-                    listOf("720P")
-                }
+                val hostId = src["_id"]?.s() ?: return@forEach
+                val serverName = src["server_name"]?.s() ?: "Server"
+                val provider = src["provider"]?.s() ?: ""
+                val subTitle = src["sub_title"]?.s() ?: ""
+
+                val qualitiesList = src["qualities"].arr().mapNotNull { it.s() }.takeIf { it.isNotEmpty() }
+                    ?: listOf("720P")
 
                 for (quality in qualitiesList) {
                     try {
@@ -503,8 +507,8 @@ class AnimeRift : MainAPI() {
                             "event_name" to "play_episode_unlocked"
                         )
                         val canPlayJson = apiCall(canPlayUrl, "ANIME.LIBRARY.EPISODES.SOURCES.CHECK_AVAILABILITY", method = "POST", body = canPlayBody)
-                        val sessionId = canPlayJson.get("sessionId")?.asText() ?: ""
-                        
+                        val sessionId = canPlayJson["sessionId"]?.s() ?: ""
+
                         val claimUrl = "$baseUrl/ads_manager/claim"
                         val claimBody = mapOf(
                             "event_name" to "play_episode_unlocked",
@@ -519,7 +523,7 @@ class AnimeRift : MainAPI() {
                         try {
                             apiCall(claimUrl, "USER.ADS_MANAGER.CLAIMS", method = "PUT", body = claimBody)
                         } catch (_: Exception) {}
-                        
+
                         val directLinkUrl = "$baseUrl/library/episode/source/direct_link"
                         val directLinkBody = mapOf(
                             "id" to hostId,
@@ -528,15 +532,15 @@ class AnimeRift : MainAPI() {
                             "sessionId" to sessionId
                         )
                         val directLinkJson = apiCall(directLinkUrl, "ANIME.LIBRARY.EPISODES.SOURCES.DIRECT_LINK", method = "POST", body = directLinkBody)
-                        directLinkJson.get("tracks")?.forEach { track ->
-                            val trackUrl = track.get("file")?.asText() ?: track.get("url")?.asText()
-                            val trackLang = track.get("label")?.asText() ?: track.get("language")?.asText() ?: "Arabic"
+                        directLinkJson["tracks"].arr().forEach { track ->
+                            val trackUrl = track["file"]?.s() ?: track["url"]?.s()
+                            val trackLang = track["label"]?.s() ?: track["language"]?.s() ?: "Arabic"
                             if (!trackUrl.isNullOrEmpty()) {
                                 subtitleCallback(SubtitleFile(trackLang, trackUrl))
                             }
                         }
-                        if (directLinkJson.get("url_response")?.asBoolean() == true) {
-                            val videoUrl = directLinkJson.get("videoUrl")?.asText()
+                        if (directLinkJson["url_response"]?.b() == true) {
+                            val videoUrl = directLinkJson["videoUrl"]?.s()
 
                             if (!videoUrl.isNullOrEmpty()) {
                                 val customHeaders = mutableMapOf(
@@ -552,9 +556,9 @@ class AnimeRift : MainAPI() {
                                     null
                                 }
                                 customHeaders["Host"] = hostFromUrl ?: "media-1.rift-content.com"
-                                
-                                directLinkJson.get("http_headers")?.fields()?.forEach { (k, v) ->
-                                    customHeaders[k] = v.asText()
+
+                                (directLinkJson["http_headers"] as? JsonObject)?.forEach { (k, v) ->
+                                    (v as? JsonPrimitive)?.contentOrNull?.let { customHeaders[k] = it }
                                 }
 
                                 callback.invoke(
@@ -568,11 +572,11 @@ class AnimeRift : MainAPI() {
                                     }
                                 )
                             }
-                        } 
-                        else if (directLinkJson.get("ticket_response")?.asBoolean() == true) {
-                            val fileId = directLinkJson.get("fileId")?.asText() ?: ""
-                            val ticket = directLinkJson.get("ticket")?.asText() ?: ""
-                            val waitTimeSeconds = directLinkJson.get("wait_time")?.asLong() ?: 5L
+                        }
+                        else if (directLinkJson["ticket_response"]?.b() == true) {
+                            val fileId = directLinkJson["fileId"]?.s() ?: ""
+                            val ticket = directLinkJson["ticket"]?.s() ?: ""
+                            val waitTimeSeconds = directLinkJson["wait_time"]?.l() ?: 5L
 
                             android.util.Log.d(name, "⏳ [Streamtape] تذكرة للملف: $fileId | الوقت المطلوب للانتظار: $waitTimeSeconds ثوانٍ")
 
@@ -582,20 +586,20 @@ class AnimeRift : MainAPI() {
                                 val tapeApiUrl = "https://api.streamtape.com/file/dl?file=$fileId&ticket=$ticket"
                                 android.util.Log.d(name, "🚀 [Streamtape] جاري إرسال طلب التحميل -> $tapeApiUrl")
 
-                                var tapeRes = app.get(tapeApiUrl).parsed<JsonNode>()
-                                val status = tapeRes.get("status")?.asInt()
-                                val msg = tapeRes.get("msg")?.asText()
+                                var tapeRes = app.get(tapeApiUrl).parsed<JsonObject>()
+                                val status = tapeRes["status"]?.i()
+                                val msg = tapeRes["msg"]?.s()
 
                                 android.util.Log.d(name, "📥 [Streamtape] رد السيرفر -> الحالة: $status | الرسالة: $msg | الرد الكامل: $tapeRes")
 
                                 if (status != 200) {
                                     android.util.Log.d(name, "⚠️ [Streamtape] الحالة ليست 200، جاري الانتظار ثانيتين وإعادة المحاولة...")
                                     kotlinx.coroutines.delay(2000)
-                                    tapeRes = app.get(tapeApiUrl).parsed<JsonNode>()
-                                    android.util.Log.d(name, "📥 [Streamtape] رد المحاولة الثانية -> الحالة: ${tapeRes.get("status")?.asInt()} | الرد: $tapeRes")
+                                    tapeRes = app.get(tapeApiUrl).parsed<JsonObject>()
+                                    android.util.Log.d(name, "📥 [Streamtape] رد المحاولة الثانية -> الحالة: ${tapeRes["status"]?.i()} | الرد: $tapeRes")
                                 }
 
-                                val tapeDirectUrl = tapeRes.get("result")?.get("url")?.asText()
+                                val tapeDirectUrl = tapeRes["result"]["url"]?.s()
                                 android.util.Log.d(name, "✅ [Streamtape] رابط الفيديو المستخرج: $tapeDirectUrl")
 
                                 if (!tapeDirectUrl.isNullOrEmpty()) {

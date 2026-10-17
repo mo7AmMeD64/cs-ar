@@ -71,6 +71,13 @@ iq3
 </ul>
 
 
+## 👀 الــزوار
+
+<div align="center">
+  <a href="https://count.getloli.com/">
+    <img src="https://count.getloli.com/@mo7AmMeD64-cs-ar?name=mo7AmMeD64-cs-ar&theme=rule34&padding=8&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="Visitor count"/>
+  </a>
+</div>
 
 <h2>⚖️ الحقوق</h2>
 <p>📝 حقوق التعديل والاستخدام مفتوحة لجميع المستخدمين.</p>
