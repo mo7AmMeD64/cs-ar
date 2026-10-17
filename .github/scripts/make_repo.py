@@ -17,7 +17,7 @@ PLUGINS = [
     {
         "internalName": "ShabakatyCinemana",
         "name": "Shabakaty Cinemana",
-        "iconUrl": "https://cinemana.shabakaty.com/img/icone.png",
+        "iconUrl": "https://pbs.twimg.com/profile_images/1555882172178907136/jismNIAg_400x400.jpg",
         "version": 1,
         "tvTypes": ["Movie", "TvSeries", "Anime"],
         "language": "ar",
@@ -25,7 +25,7 @@ PLUGINS = [
     {
         "internalName": "CinemaBox",
         "name": "Cinema Box",
-        "iconUrl": None,
+        "iconUrl": "https://cinema.albox.co/_next/image?url=%2Ficons%2Fapple-touch-icon.png&w=96&q=75",
         "version": 2,
         "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
         "language": "ar",
@@ -33,7 +33,7 @@ PLUGINS = [
     {
         "internalName": "MeowTv",
         "name": "MeowTV",
-        "iconUrl": None,
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/icons/MeowTv.png",
         "version": 4,
         "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
         "language": "en",
@@ -57,7 +57,7 @@ PLUGINS = [
     {
         "internalName": "CinemaPlus",
         "name": "Cinema Plus",
-        "iconUrl": "https://j.top4top.io/p_3472gwtpo1.jpg",
+        "iconUrl": "https://play-lh.googleusercontent.com/45Zr4KXlCZ6N3wAMKa8xPvZ0u-x27a78QRW4l7FRxaegfBQ6qAocdXU8l9QYb5EpM3vSUpDU3yHMQCNzpSXBWw",
         "version": 4,
         "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie"],
         "language": "ar",
@@ -65,7 +65,7 @@ PLUGINS = [
     {
         "internalName": "CartoonDub",
         "name": "كرتون مدبلج",
-        "iconUrl": "https://imgs1.e-droid.net/srv/imgs/cards/c4046384_8106043_main.png?v=1",
+        "iconUrl": "https://play-lh.googleusercontent.com/kuFOkLUbmgW0_XMmdMSFvHAvxpzOLbn2OrvYATSnCusFyNgQp76UAW5hyWfGA4Oqo2u8IjQujmNkbncMf0avNYw=w480-h960-rw",
         "version": 7,
         "tvTypes": ["TvSeries", "Movie", "Anime", "Cartoon"],
         "language": "ar",
@@ -73,7 +73,7 @@ PLUGINS = [
     {
         "internalName": "CimaCloud",
         "name": "Cima Cloud",
-        "iconUrl": None,
+        "iconUrl": "https://cima-cloud.com/images/logo.png",
         "version": 2,
         "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie"],
         "language": "ar",
@@ -81,7 +81,7 @@ PLUGINS = [
     {
         "internalName": "MovieBoxProvider",
         "name": "MovieBox",
-        "iconUrl": None,
+        "iconUrl": "https://img.utdstc.com/icon/dc7/59a/dc759aeb96e27c35acb29d74236106db8181ee6c6730c67002d710f1e54c2a1d:200",
         "version": 52,
         "tvTypes": ["Movie", "TvSeries"],
         "language": "hi",
@@ -162,7 +162,7 @@ PLUGINS = [
     {
         "internalName": "OscarTv",
         "name": "Oscar TV",
-        "iconUrl": None,
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/icons/OscarTv.png",
         "version": 3,
         "tvTypes": ["Movie", "TvSeries", "Anime", "TvChannel"],
         "language": "ar",
@@ -218,7 +218,7 @@ PLUGINS = [
     {
         "internalName": "VioLa",
         "name": "Vio-La",
-        "iconUrl": None,
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/icons/VioLa.png",
         "version": 2,
         "tvTypes": ["Movie", "TvSeries"],
         "language": "ar",
@@ -267,7 +267,7 @@ PLUGINS = [
     {
         "internalName": "Egywatch",
         "name": "إيجي واتش",
-        "iconUrl": "https://egywatch.live/page/images/og-banner-home.jpg",
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/icons/Egywatch.png",
         "version": 2,
         "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie", "Live"],
         "language": "ar",
