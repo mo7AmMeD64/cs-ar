@@ -260,10 +260,10 @@
     "name": "Top Cinema"
   },
   {
-    "iconUrl": "https://web8.topcinema.cam/wp-content/uploads/2023/05/cropped-icon-32x32.png",
+    "iconUrl": "https://stardima.app/logo.png",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 21663,
+    "fileSize": 4202499,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -272,12 +272,13 @@
     "tvTypes": [
       "Movie",
       "TvSeries",
+      "Anime",
       "Cartoon",
-      "Anime"
+      "AnimeMovie"
     ],
-    "version": 1,
-    "internalName": "Stardima",
-    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Stardima.cs3",
+    "version": 15,
+    "internalName": "StarDima",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/StarDima.cs3",
     "name": "ستارديما"
   },
   {
@@ -304,7 +305,7 @@
     "iconUrl": "https://imgs.search.brave.com/HEQ0yh4UMc8dkTZOs7RRAz7s0pOVz2QlPCK5IZPWQvI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGRiZTMwOWQw/YmFkMjg2NGM0YmE0/MWNiMzYzMzhjZmVk/Nzc4MTNkZTRkYjg3/ODU1MTM5NDM3Yjlh/NmMzZDNjMS9hbmlt/ZS1zbGF5ZXIubmV0/Lw",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 20821,
+    "fileSize": 29381,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -315,7 +316,7 @@
       "Anime",
       "Movie"
     ],
-    "version": 2,
+    "version": 3,
     "internalName": "AnimeSlayer",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/AnimeSlayer.cs3",
     "name": "أنمي سلاير"
@@ -555,5 +556,87 @@
     "internalName": "StreamPlay",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/StreamPlay.cs3",
     "name": "StreamPlay"
+  },
+  {
+    "iconUrl": "https://www.anime-day.com/favicon.ico",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 3290726,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Anime",
+      "TvSeries",
+      "Movie",
+      "Cartoon"
+    ],
+    "version": 23,
+    "internalName": "AnimeDay",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/AnimeDay.cs3",
+    "name": "أنمي داي"
+  },
+  {
+    "iconUrl": "https://raw.githubusercontent.com/Abodabodd/re-3arabi/refs/heads/main/AnimeRift/icon.png",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 51647,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "TvSeries",
+      "Anime",
+      "Movie"
+    ],
+    "version": 1,
+    "internalName": "AnimeRift",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/AnimeRift.cs3",
+    "name": "AnimeRift"
+  },
+  {
+    "iconUrl": "https://github.com/mehdigm4life/mehdigm-stream/raw/refs/heads/main/build/DramaWorld.png",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 45586,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 3,
+    "internalName": "DramaWorld",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/DramaWorld.cs3",
+    "name": "DramaWorld"
+  },
+  {
+    "iconUrl": "https://egywatch.live/page/images/og-banner-home.jpg",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 45648,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Anime",
+      "AnimeMovie",
+      "Live"
+    ],
+    "version": 2,
+    "internalName": "Egywatch",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Egywatch.cs3",
+    "name": "إيجي واتش"
   }
 ]
