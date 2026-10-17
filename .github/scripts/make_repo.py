@@ -33,7 +33,7 @@ PLUGINS = [
     {
         "internalName": "MeowTv",
         "name": "MeowTV",
-        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/icons/MeowTv.png",
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icons/MeowTv.png",
         "version": 4,
         "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
         "language": "en",
@@ -162,7 +162,7 @@ PLUGINS = [
     {
         "internalName": "OscarTv",
         "name": "Oscar TV",
-        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/icons/OscarTv.png",
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icons/OscarTv.png",
         "version": 3,
         "tvTypes": ["Movie", "TvSeries", "Anime", "TvChannel"],
         "language": "ar",
@@ -218,7 +218,7 @@ PLUGINS = [
     {
         "internalName": "VioLa",
         "name": "Vio-La",
-        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/icons/VioLa.png",
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icons/VioLa.png",
         "version": 2,
         "tvTypes": ["Movie", "TvSeries"],
         "language": "ar",
@@ -267,7 +267,7 @@ PLUGINS = [
     {
         "internalName": "Egywatch",
         "name": "إيجي واتش",
-        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/icons/Egywatch.png",
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icons/Egywatch.png",
         "version": 2,
         "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie", "Live"],
         "language": "ar",
