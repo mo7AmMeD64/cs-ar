@@ -643,7 +643,7 @@
     "iconUrl": "https://carateen.tv/assets/img/favicons/apple-touch-icon.png",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 21036,
+    "fileSize": 24252,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -653,9 +653,10 @@
       "Movie",
       "TvSeries",
       "Anime",
-      "Cartoon"
+      "Cartoon",
+      "Live"
     ],
-    "version": 1,
+    "version": 2,
     "internalName": "Carateen",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Carateen.cs3",
     "name": "كراتين"
