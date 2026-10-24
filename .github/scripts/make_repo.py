@@ -276,8 +276,8 @@ PLUGINS = [
         "internalName": "Carateen",
         "name": "كراتين",
         "iconUrl": "https://carateen.tv/assets/img/favicons/apple-touch-icon.png",
-        "version": 1,
-        "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
+        "version": 2,
+        "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon", "Live"],
         "language": "ar",
     },
 ]

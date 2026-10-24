@@ -12,6 +12,8 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
+import com.lagradost.cloudstream3.newLiveSearchResponse
+import com.lagradost.cloudstream3.newLiveStreamLoadResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
@@ -39,12 +41,14 @@ class CarateenProvider : MainAPI() {
     override var name = "كراتين"
     override var mainUrl = "https://carateen.tv"
     override var lang = "ar"
-    override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Anime, TvType.Cartoon)
+    override val supportedTypes =
+        setOf(TvType.Movie, TvType.TvSeries, TvType.Anime, TvType.Cartoon, TvType.Live)
     override val hasMainPage = true
 
     override val mainPage = mainPageOf(
         "sp" to "سبيستون غو",
         "tg" to "كرتون أيام زمان",
+        "live" to "البث المباشر",
     )
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -59,6 +63,10 @@ class CarateenProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        if (request.data == "live") {
+            val items = getChannels().mapNotNull { it.toLiveSearch() }
+            return newHomePageResponse(request.name, items, false)
+        }
         val items = getShows(request.data).mapNotNull { it.toSearch(request.data) }
         return newHomePageResponse(request.name, items, false)
     }
@@ -77,9 +85,19 @@ class CarateenProvider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val parts = url.split("|")
+        // CloudStream prepends mainUrl to our data strings (fixUrl), so strip it back off.
+        val parts = url.substringAfterLast("/").split("|")
         val kind = parts.getOrNull(0) ?: return null
         val showId = parts.getOrNull(1) ?: return null
+
+        if (kind == "live") {
+            val channel = getChannels().firstOrNull { it.str("id") == showId } ?: return null
+            val channelName = channel.str("name") ?: return null
+            return newLiveStreamLoadResponse(channelName, url, url) {
+                this.posterUrl = channel.str("logo")
+                    ?.let { if (it.startsWith("http")) it else "$mainUrl$it" }
+            }
+        }
         val show = getShows(kind).firstOrNull { it.str("id") == showId } ?: return null
         val title = show.title(kind) ?: return null
         val poster = show.poster(kind)
@@ -122,9 +140,25 @@ class CarateenProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
-        val parts = data.split("|")
+        // Episode ids are fixed by newEpisode too, so the same strip applies.
+        val parts = data.substringAfterLast("/").split("|")
         val kind = parts.getOrNull(0) ?: return false
         val showId = parts.getOrNull(1) ?: return false
+
+        if (kind == "live") {
+            val channel = getChannels().firstOrNull { it.str("id") == showId } ?: return false
+            val streamUrl = channel.str("url") ?: return false
+            val link = if (streamUrl.startsWith("http")) streamUrl else "$mainUrl$streamUrl"
+            // Legacy CDNs reject the carateen referer; the site's own proxy requires it.
+            val headers = if (channel.str("isLegacy") == "true") mapOf("User-Agent" to UA)
+            else requestHeaders
+            callback(
+                newExtractorLink(name, channel.str("name") ?: name, link, ExtractorLinkType.M3U8) {
+                    this.headers = headers
+                },
+            )
+            return true
+        }
 
         // Movie data has no episode id: emit one link per part (some "movies" ship as 2+ files).
         val targets: List<Pair<String, String?>> = parts.getOrNull(2)?.let { listOf(it to null) }
@@ -152,6 +186,13 @@ class CarateenProvider : MainAPI() {
         val path = if (kind == "sp") "/api/sp/tvshows" else "/api/tvshows"
         val list = (get(path) as? JsonArray)?.mapNotNull { it as? JsonObject } ?: emptyList()
         if (list.isNotEmpty()) shows[kind] = list
+        list
+    }
+
+    private suspend fun getChannels(): List<JsonObject> = shows["live"] ?: run {
+        val list = ((get("/api/sp/live") as? JsonObject)?.get("channels") as? JsonArray)
+            ?.mapNotNull { it as? JsonObject } ?: emptyList()
+        if (list.isNotEmpty()) shows["live"] = list
         list
     }
 
@@ -244,6 +285,14 @@ class CarateenProvider : MainAPI() {
                 this.posterUrl = poster
                 this.score = score
             }
+        }
+    }
+
+    private fun JsonObject.toLiveSearch(): SearchResponse? {
+        val id = str("id") ?: return null
+        val channelName = str("name") ?: return null
+        return newLiveSearchResponse(channelName, "live|$id") {
+            this.posterUrl = str("logo")?.let { if (it.startsWith("http")) it else "$mainUrl$it" }
         }
     }
 }
