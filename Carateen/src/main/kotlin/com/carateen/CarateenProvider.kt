@@ -86,7 +86,7 @@ class CarateenProvider : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse? {
         // CloudStream prepends mainUrl to our data strings (fixUrl), so strip it back off.
-        val parts = url.substringAfterLast("/").split("|")
+        val parts = url.substringAfter("$mainUrl/").split("|")
         val kind = parts.getOrNull(0) ?: return null
         val showId = parts.getOrNull(1) ?: return null
 
@@ -141,7 +141,7 @@ class CarateenProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
         // Episode ids are fixed by newEpisode too, so the same strip applies.
-        val parts = data.substringAfterLast("/").split("|")
+        val parts = data.substringAfter("$mainUrl/").split("|")
         val kind = parts.getOrNull(0) ?: return false
         val showId = parts.getOrNull(1) ?: return false
 
