@@ -638,5 +638,26 @@
     "internalName": "Egywatch",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Egywatch.cs3",
     "name": "إيجي واتش"
+  },
+  {
+    "iconUrl": "https://carateen.tv/assets/img/favicons/apple-touch-icon.png",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 21036,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Anime",
+      "Cartoon"
+    ],
+    "version": 1,
+    "internalName": "Carateen",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Carateen.cs3",
+    "name": "كراتين"
   }
 ]
