@@ -272,6 +272,14 @@ PLUGINS = [
         "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie", "Live"],
         "language": "ar",
     },
+    {
+        "internalName": "Carateen",
+        "name": "كراتين",
+        "iconUrl": "https://carateen.tv/assets/img/favicons/apple-touch-icon.png",
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries", "Anime", "Cartoon"],
+        "language": "ar",
+    },
 ]
 
 os.makedirs("repo", exist_ok=True)
