@@ -1,17 +1,20 @@
-version = 1
+version = 4
 
 cloudstream {
-    description = "⚠️ تنبيه: يُرجى استخدام VPN لتجنب حظر عنوان الـ IP الخاص بك"
-    authors = listOf("Abodabodd")
+    description = "أنمي رِفت (AnimeRift) — التطبيق الرسمي: مترجم ومدبلج عربي بجميع الجودات ومصادر المشاهدة والتحميل."
+    authors = listOf("mehdigm4life")
     language = "ar"
 
     status = 1
 
     tvTypes = listOf(
-        "TvSeries",
         "Anime",
-        "Movie"
+        "AnimeMovie",
+        "OVA",
+        "TvSeries",
+        "Movie",
+        "Cartoon"
     )
 
-    iconUrl = "https://raw.githubusercontent.com/Abodabodd/re-3arabi/refs/heads/main/AnimeRift/icon.png"
+    iconUrl = "https://www.anime-rift.com/logo.png"
 }

@@ -250,10 +250,18 @@ PLUGINS = [
     },
     {
         "internalName": "AnimeRift",
-        "name": "AnimeRift",
-        "iconUrl": "https://raw.githubusercontent.com/Abodabodd/re-3arabi/refs/heads/main/AnimeRift/icon.png",
-        "version": 1,
-        "tvTypes": ["TvSeries", "Anime", "Movie"],
+        "name": "أنمي رِفت (AnimeRift)",
+        "iconUrl": "https://www.anime-rift.com/logo.png",
+        "version": 4,
+        "tvTypes": ["Anime", "AnimeMovie", "OVA", "TvSeries", "Movie", "Cartoon"],
+        "language": "ar",
+    },
+    {
+        "internalName": "WitAnime",
+        "name": "ويت أنمي (WitAnime)",
+        "iconUrl": "https://witanime.site/favicon.ico",
+        "version": 23,
+        "tvTypes": ["Anime", "AnimeMovie", "OVA", "TvSeries", "Movie", "Cartoon"],
         "language": "ar",
     },
     {
