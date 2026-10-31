@@ -579,24 +579,50 @@
     "name": "أنمي داي"
   },
   {
-    "iconUrl": "https://raw.githubusercontent.com/Abodabodd/re-3arabi/refs/heads/main/AnimeRift/icon.png",
+    "iconUrl": "https://www.anime-rift.com/logo.png",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 51647,
+    "fileSize": 56335,
     "status": 1,
     "language": "ar",
     "authors": [
       "mo7AmMeD64"
     ],
     "tvTypes": [
-      "TvSeries",
       "Anime",
-      "Movie"
+      "AnimeMovie",
+      "OVA",
+      "TvSeries",
+      "Movie",
+      "Cartoon"
     ],
-    "version": 1,
+    "version": 4,
     "internalName": "AnimeRift",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/AnimeRift.cs3",
-    "name": "AnimeRift"
+    "name": "أنمي رِفت (AnimeRift)"
+  },
+  {
+    "iconUrl": "https://witanime.site/favicon.ico",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 166810,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "Anime",
+      "AnimeMovie",
+      "OVA",
+      "TvSeries",
+      "Movie",
+      "Cartoon"
+    ],
+    "version": 23,
+    "internalName": "WitAnime",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/WitAnime.cs3",
+    "name": "ويت أنمي (WitAnime)"
   },
   {
     "iconUrl": "https://github.com/mehdigm4life/mehdigm-stream/raw/refs/heads/main/build/DramaWorld.png",
