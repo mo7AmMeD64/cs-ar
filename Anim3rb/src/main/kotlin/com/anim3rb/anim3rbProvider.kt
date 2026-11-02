@@ -109,8 +109,14 @@ class Anime3rb(val context: Context) : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         val mainDoc = getDocumentSmart(mainUrl) ?: return emptyList()
 
-        val scriptTag = mainDoc.selectFirst("script[src*=livewire.min.js]")
-        val csrfToken = scriptTag?.attr("data-csrf") ?: return emptyList()
+        val scriptTag = mainDoc.selectFirst("script[data-csrf]") ?: return emptyList()
+        val csrfToken = scriptTag.attr("data-csrf")
+        val updateUriAttr = scriptTag.attr("data-update-uri")
+        val updateUrl = if (updateUriAttr.isNotBlank()) {
+            toAbsoluteUrl(updateUriAttr)
+        } else {
+            "$mainUrl/livewire/update" // fallback احتياطي
+        }
 
         val form = mainDoc.selectFirst("form[wire:id]")
         val snapshotRaw = form?.attr("wire:snapshot") ?: return emptyList()
@@ -119,6 +125,8 @@ class Anime3rb(val context: Context) : MainAPI() {
         val headers = mutableMapOf(
             "User-Agent" to USER_AGENT,
             "Accept" to "*/*",
+            "X-Livewire" to "1",
+            "Sec-Fetch-Site" to "same-origin",
             "Content-Type" to "application/json",
             "Origin" to mainUrl,
             "Referer" to "$mainUrl/"
@@ -127,7 +135,6 @@ class Anime3rb(val context: Context) : MainAPI() {
             headers["Cookie"] = savedCookies
         }
 
-        val updateUrl = "$mainUrl/livewire/update"
         val payload = mapOf(
             "_token" to csrfToken,
             "components" to listOf(
