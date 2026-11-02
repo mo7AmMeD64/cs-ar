@@ -168,11 +168,11 @@ PLUGINS = [
         "language": "ar",
     },
     {
-        "internalName": "FaselMeta",
-        "name": "FaselHD Meta",
-        "iconUrl": None,
-        "version": 2,
-        "tvTypes": ["Movie", "TvSeries", "Anime"],
+        "internalName": "Faselhd",
+        "name": "FaselHD",
+        "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ03aoQBNDy_Hkm5MUGGvluPvK7To7BdGiSnzQn7WJ3fQ&s=10",
+        "version": 3,
+        "tvTypes": ["TvSeries", "Movie"],
         "language": "ar",
     },
     {

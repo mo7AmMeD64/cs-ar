@@ -61,7 +61,7 @@ iq3
 <li>weCima</li>
 <li>ArabSeed</li>
 <li>Cee</li>
-<li>FaselMeta</li>
+<li>FaselHD</li>
 </ul>
 
 <h2> الهدف</h2>
