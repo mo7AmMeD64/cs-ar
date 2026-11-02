@@ -384,6 +384,25 @@
     "name": "Oscar TV"
   },
   {
+    "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ03aoQBNDy_Hkm5MUGGvluPvK7To7BdGiSnzQn7WJ3fQ&s=10",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
+    "fileSize": 52683,
+    "status": 1,
+    "language": "ar",
+    "authors": [
+      "mo7AmMeD64"
+    ],
+    "tvTypes": [
+      "TvSeries",
+      "Movie"
+    ],
+    "version": 3,
+    "internalName": "Faselhd",
+    "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Faselhd.cs3",
+    "name": "FaselHD"
+  },
+  {
     "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxoF3lscri32oVf0iQlhbjFEoUn2xg3OmQIx4wYdDmqw&s",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
