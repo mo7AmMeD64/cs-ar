@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.bundling.Zip
-
 version = 15
 
 cloudstream {
@@ -20,8 +18,3 @@ cloudstream {
     iconUrl = "https://stardima.app/logo.png"
 }
 
-tasks.named<Zip>("make") {
-    from("src/main/assets/native") {
-        into("native")
-    }
-}
