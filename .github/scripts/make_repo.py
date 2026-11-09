@@ -18,7 +18,7 @@ PLUGINS = [
         "internalName": "ShabakatyCinemana",
         "name": "Shabakaty Cinemana",
         "iconUrl": "https://pbs.twimg.com/profile_images/1555882172178907136/jismNIAg_400x400.jpg",
-        "version": 1,
+        "version": 5,
         "tvTypes": ["Movie", "TvSeries", "Anime"],
         "language": "ar",
     },
