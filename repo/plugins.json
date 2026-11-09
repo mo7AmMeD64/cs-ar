@@ -3,7 +3,7 @@
     "iconUrl": "https://pbs.twimg.com/profile_images/1555882172178907136/jismNIAg_400x400.jpg",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 19081,
+    "fileSize": 53774,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -14,7 +14,7 @@
       "TvSeries",
       "Anime"
     ],
-    "version": 1,
+    "version": 5,
     "internalName": "ShabakatyCinemana",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/ShabakatyCinemana.cs3",
     "name": "Shabakaty Cinemana"
