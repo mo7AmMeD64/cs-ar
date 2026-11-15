@@ -12,9 +12,9 @@
 
 <h2>⬇️ انسخ الرابط واللصقه في التطبيق او اضغط على الصوره لتحميل الإضافات</h2>
 
-<p align="left">
+```text
 https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/repo.json
-</p>
+```
 
 <p align="left">
 <a href="https://mo7ammed64.github.io/click_image/">
