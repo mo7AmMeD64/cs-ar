@@ -12,19 +12,7 @@ import java.net.URLEncoder
 import java.util.Calendar
 import java.util.TimeZone
 
-/**
- * Cinema Box (cinema.albox.co) provider.
- *
- * API (v4, no login needed, identified only by "Device-*" headers):
- *   GET /home                               -> sections[] (each with data[] cards)
- *   GET /search?term=&page_number=&page_size=[&category_id=]
- *   GET /shows/shows/dynamic/{id}           -> post_info + sections (trailer / episodes / related)
- *   GET /shows/shows/dynamic/{id}?season_id={seasonId}
- *                                           -> same, but the "episodes" section holds THAT season
- *                                          (the "Seasons" section lists every season: id + title = number)
- *   GET /shows/seasons/player/{seasonId}    -> episodes[] of a season (fallback)
- *   GET /shows/episodes/player/{id}         -> videos[] + subtitles[] (movies use the show id)
- */
+
 class CinemaBoxProvider : MainAPI() {
 
     override var name = "Cinema Box"
@@ -53,7 +41,7 @@ class CinemaBoxProvider : MainAPI() {
         (1..16).map { "0123456789abcdef".random() }.joinToString("")
 
     private val apiHeaders: Map<String, String> = mapOf(
-        "Accept-Language" to "en",
+        "Accept-Language" to "ar",
         "Device-Id" to deviceId,
         "Device-Model" to "Xiaomi 23043RP34G",
         "Device-OS-Version" to "14",
