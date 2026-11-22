@@ -244,7 +244,7 @@ PLUGINS = [
         "internalName": "AnimeDay",
         "name": "أنمي داي",
         "iconUrl": "https://www.anime-day.com/favicon.ico",
-        "version": 24,
+        "version": 25,
         "tvTypes": ["Anime", "TvSeries", "Movie", "Cartoon"],
         "language": "ar",
     },

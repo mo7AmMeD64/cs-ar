@@ -114,9 +114,10 @@ class AnimeDay : MainAPI() {
     }
 
     private fun freshToken(): String? {
+        val ctx = appContext ?: return null
         return try {
-            val t = AnimeDayCrypto.buildSecureToken()
-            android.util.Log.i("AnimeDayNative", "freshToken: got token len=" + t.length)
+            val t = NativeToken.secureId(ctx)
+            android.util.Log.i("AnimeDayNative", "freshToken: got token len=" + (t?.length ?: -1))
             t
         } catch (e: Throwable) {
             android.util.Log.i("AnimeDayNative", "freshToken: threw " + e)
@@ -124,15 +125,21 @@ class AnimeDay : MainAPI() {
         }
     }
 
-    /** Headers used for the encrypted /servers endpoints. Returns the cloudflare-id too. */
-    private fun serverHeaders(): Pair<Map<String, String>, String> {
-        val cf = randomString(15) + androidId()
+    /** Auth-only headers for series/movie/episode detail (no cloudflare-id). */
+    private fun authHeaders(): MutableMap<String, String> {
         val headers = mutableMapOf(
             "User-Agent" to UA,
-            "Accept" to "application/json, text/plain, */*",
-            "cloudflare-id" to cf
+            "Accept" to "application/json, text/plain, */*"
         )
         freshToken()?.let { headers["firebase_id"] = it }
+        return headers
+    }
+
+    /** Headers for the encrypted /servers endpoints. Returns the cloudflare-id too. */
+    private fun serverHeaders(): Pair<Map<String, String>, String> {
+        val cf = randomString(15) + androidId()
+        val headers = authHeaders()
+        headers["cloudflare-id"] = cf
         return headers to cf
     }
 
@@ -317,10 +324,7 @@ class AnimeDay : MainAPI() {
 
     private suspend fun fetchJson(endpoint: String, withToken: Boolean): JSONObject? {
         return try {
-            val headers = if (withToken) {
-                val (h, _) = serverHeaders()
-                h
-            } else plainHeaders()
+            val headers = if (withToken) authHeaders() else plainHeaders()
             val res = app.get(endpoint, headers = headers)
             val body = res.text
             android.util.Log.i("AnimeDay", "fetchJson GET $endpoint token=$withToken -> ${res.code} len=${body.length} body=${body.take(240)}")
