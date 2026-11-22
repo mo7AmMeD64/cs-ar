@@ -3,7 +3,6 @@ package com.animeday
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
-import com.anime.day.Utils.NativeLib
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -115,11 +114,9 @@ class AnimeDay : MainAPI() {
     }
 
     private fun freshToken(): String? {
-        val ctx = appContext ?: return null
         return try {
-            android.util.Log.i("AnimeDayNative", "freshToken: calling buildSecure")
-            val t = NativeLib.secureId(ctx)
-            android.util.Log.i("AnimeDayNative", "freshToken: got token len=" + (t?.length ?: -1) + " prefix=" + t?.take(24))
+            val t = AnimeDayCrypto.buildSecureToken()
+            android.util.Log.i("AnimeDayNative", "freshToken: got token len=" + t.length)
             t
         } catch (e: Throwable) {
             android.util.Log.i("AnimeDayNative", "freshToken: threw " + e)
@@ -352,10 +349,7 @@ class AnimeDay : MainAPI() {
             val decrypted = if (raw.trim().startsWith("{") || raw.trim().startsWith("[")) {
                 raw
             } else {
-                val ctx = appContext
-                val keyArg = cf.substring(15)
-                val out = if (ctx != null) NativeLib.decrypt(ctx, raw.trim(), keyArg) else null
-                out ?: raw
+                AnimeDayCrypto.decryptResponse(raw.trim(), cf.substring(15)) ?: raw
             }
             android.util.Log.i("AnimeDay", "loadLinks decrypted len=${decrypted.length} head=${decrypted.take(240)}")
 
