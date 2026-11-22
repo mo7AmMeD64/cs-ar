@@ -560,7 +560,7 @@
     "iconUrl": "https://www.anime-day.com/favicon.ico",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 62237,
+    "fileSize": 3291884,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -572,7 +572,7 @@
       "Movie",
       "Cartoon"
     ],
-    "version": 24,
+    "version": 25,
     "internalName": "AnimeDay",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/AnimeDay.cs3",
     "name": "أنمي داي"
