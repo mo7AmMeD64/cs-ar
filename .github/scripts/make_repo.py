@@ -144,6 +144,14 @@ PLUGINS = [
         "language": "ar",
     },
     {
+        "internalName": "Vodu",
+        "name": "VODU",
+        "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icons/Vodu.png",
+        "version": 1,
+        "tvTypes": ["Movie", "TvSeries"],
+        "language": "ar",
+    },
+    {
         "internalName": "AnimeSlayer",
         "name": "أنمي سلاير",
         "iconUrl": "https://imgs.search.brave.com/HEQ0yh4UMc8dkTZOs7RRAz7s0pOVz2QlPCK5IZPWQvI/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMGRiZTMwOWQw/YmFkMjg2NGM0YmE0/MWNiMzYzMzhjZmVk/Nzc4MTNkZTRkYjg3/ODU1MTM5NDM3Yjlh/NmMzZDNjMS9hbmlt/ZS1zbGF5ZXIubmV0/Lw",

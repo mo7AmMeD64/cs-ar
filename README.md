@@ -51,6 +51,7 @@ iq3
 <li>Animewitcher</li>
 <li>YACINE TV</li>
 <li>OhLIVE</li>
+<li>VODU</li>
 <li>Stream play</li>
 <li>Vio-la</li>
 <li>Akwam</li>
