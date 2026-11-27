@@ -147,7 +147,7 @@ PLUGINS = [
         "internalName": "Vodu",
         "name": "VODU",
         "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icons/Vodu.png",
-        "version": 1,
+        "version": 2,
         "tvTypes": ["Movie", "TvSeries"],
         "language": "ar",
     },

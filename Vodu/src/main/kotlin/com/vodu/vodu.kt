@@ -312,10 +312,10 @@ class VoduProvider : MainAPI() {
         }
 
         val subtitlesMatch = Regex(
-            """buildSubtitleTracks\((\[\{.*?}\])\s*\)""",
+            """buildSubtitleTracks\((\[\{.*?\}\])\s*\)""",
             RegexOption.DOT_MATCHES_ALL
         ).find(html)?.groupValues?.get(1) ?: Regex(
-            """const\s+subtitlesRaw\s*=\s*(\[\{.*?}\]);""",
+            """const\s+subtitlesRaw\s*=\s*(\[\{.*?\}\]);""",
             RegexOption.DOT_MATCHES_ALL
         ).find(html)?.groupValues?.get(1)
         if (!subtitlesMatch.isNullOrBlank()) {

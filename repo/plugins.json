@@ -323,7 +323,7 @@
     "iconUrl": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/icons/Vodu.png",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/mo7AmMeD64/cs-ar",
-    "fileSize": 27022,
+    "fileSize": 27007,
     "status": 1,
     "language": "ar",
     "authors": [
@@ -333,7 +333,7 @@
       "Movie",
       "TvSeries"
     ],
-    "version": 1,
+    "version": 2,
     "internalName": "Vodu",
     "url": "https://raw.githubusercontent.com/mo7AmMeD64/cs-ar/main/repo/Vodu.cs3",
     "name": "VODU"
